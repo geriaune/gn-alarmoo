@@ -32,12 +32,13 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 **Panel wiring (confirmed for SP7000; swap TX/RX if no connection):**
 
 ```
-Panel  →  ESP32
-  GND  →  GND
-  +12V →  Buck IN+
-  TX   →  RX pin (GPIO 7)
-  RX   →  TX pin (GPIO 15)
-         Buck OUT → ESP 5V
+Serial on Panel         BUCK              ESP32
+┌───────┐               
+│ Rx   ┌╵   == > == > == > == > == > == > TX
+│ Tx   │    == > == > == > == > == > == > RX
+│ GND  │    == > IN(-)   ->   OUT(-) == > USB GND 
+│ AUX+ └╷   == > IN(+)   ->   OUT(+) == > USB 5V
+└───────┘
 ```
 
 ---
