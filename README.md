@@ -87,8 +87,8 @@ wifi:
   # use_address: "100.64.0.X"  # set AFTER first flash + VPN connect
 
 uart:
-  tx_pin: 15
-  rx_pin: 7
+  tx_pin: 15    # change if required for your module
+  rx_pin: 7     # change if required for your module
   baud_rate: 9600
 
 stream_server:
@@ -131,7 +131,7 @@ INFO - Connection OK
 
 ---
 
-## ESPHome Dashboard — Gotcha
+## ESPHome
 
 Go to **HA Settings → Apps → ESPHome** and enable **"Use ping for status"**.
 mDNS doesn't work across subnets (VPN), so ICMP ping is needed to show nodes as online.
