@@ -49,7 +49,7 @@ Install these as **Home Assistant Apps/Add-ons**:
 
 1. **ESPHome** — flashes and manages ESP32 firmware
 2. **Mosquitto broker** — MQTT broker
-3. **Paradox Alarm Interface (PAI)** — decodes panel data → MQTT
+3. **[Paradox Alarm Interface (PAI)](https://github.com/ParadoxAlarmInterface/pai)** — decodes panel data → MQTT
 4. **Tailscale** — VPN (optional but recommended if HA is remote)
 
 You also need a free [Tailscale](https://tailscale.com) account, or a self-hosted [Headscale](https://headscale.net) server.
