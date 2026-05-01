@@ -3,6 +3,11 @@
 Connect a Paradox alarm panel to Home Assistant over Wi-Fi with optional VPN
 
 > ⚠️ **Important:** Only one module can use the serial interface at a time. Remove any existing IP150 or GSM modules before connecting this one. Make sure your panel is not locked or running firmware with encrypted serial comms (maybe they have fixed this already? Don't update your panel's firmware if this works!).
+> 🔒 **Network Security:** The serial stream is exposed over the network **without authentication**.
+> Anyone with access to port `10000` on the ESP can talk directly to your alarm panel.
+> Keep the ESP on an isolated IoT Wi-Fi network or a dedicated VLAN with no external access.
+> The Tailscale/VPN layer encrypts transit to HA, but does **not** protect the ESP itself from
+> other devices on the same local network segment.
 
 ---
 
@@ -41,7 +46,7 @@ Serial on Panel         BUCK              ESP32
 └───────┘
 ```
 
-You can get one already built here: - [geriaune](http://link.geriaune.pro/gn-alarmoo)
+✅ You can get one already built here: - [geriaune](http://link.geriaune.pro/gn-alarmoo)
 
 ---
 
@@ -115,7 +120,7 @@ After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboar
 | `CONNECTION_TYPE` | `IP` |
 | `IP_CONNECTION_HOST` | Your Tailscale IP of ESP (`100.XX.0.X`) |
 | `IP_CONNECTION_PASSWORD` | Panel password (default: `paradox`) |
-| `IP_CONNECTION_BARE` | ✅ Enable (required!) — this hides under "Show unused optional configuration options" |
+| `IP_CONNECTION_BARE` | ✅ Enable (⚠️ required!) — this hides under "Show unused optional configuration options" |
 | `MQTT_ENABLE` | ✅ Enable |
 | `MQTT_USERNAME` / `MQTT_PASSWORD` | Match Mosquitto broker user |
 | `MQTT_HOST` | HA's local IP (find with `ha network info`) |
