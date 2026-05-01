@@ -3,6 +3,7 @@
 Connect a Paradox alarm panel to Home Assistant over Wi-Fi with optional VPN
 
 > ⚠️ **Important:** Only one module can use the serial interface at a time. Remove any existing IP150 or GSM modules before connecting this one. Make sure your panel is not locked or running firmware with encrypted serial comms (maybe they have fixed this already? Don't update your panel's firmware if this works!).
+> 
 > 🔒 **Network Security:** The serial stream is exposed over the network **without authentication**.
 > Anyone with access to port `10000` on the ESP can talk directly to your alarm panel.
 > Keep the ESP on an isolated IoT Wi-Fi network or a dedicated VLAN with no external access.
