@@ -34,8 +34,8 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 ```
 Serial on Panel         BUCK              ESP32
 ┌───────┐               
-│ Rx   ┌╵   == > == > == > == > == > == > TX
-│ Tx   │    == > == > == > == > == > == > RX
+│ Tx   ┌╵   == > == > == > == > == > == > RX
+│ Rx   │    == > == > == > == > == > == > TX
 │ GND  │    == > IN(-)   ->   OUT(-) == > USB GND 
 │ AUX+ └╷   == > IN(+)   ->   OUT(+) == > USB 5V
 └───────┘
