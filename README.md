@@ -1,8 +1,8 @@
 # gn-alarmoo — Paradox Alarm Wi-Fi & VPN Module
 
-Connect a Paradox alarm panel to Home Assistant over Wi-Fi with optional VPN — no port forwarding required.
+Connect a Paradox alarm panel to Home Assistant over Wi-Fi with optional VPN
 
-> ⚠️ **Important:** Only one module can use the serial interface at a time. Remove any existing IP150 or GSM modules before connecting this one. Make sure your panel is not locked or running encrypted firmware.
+> ⚠️ **Important:** Only one module can use the serial interface at a time. Remove any existing IP150 or GSM modules before connecting this one. Make sure your panel is not locked or running firmware with encrypted serial comms (maybe they have fixed this already? Don't update your panel's firmware if this works!).
 
 ---
 
@@ -22,7 +22,7 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 
 | Part | Notes |
 |---|---|
-| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Required for VPN support |
+| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash is required for VPN support |
 | External Wi-Fi antenna | Optional, helps in poor signal spots |
 | 4-pin Molex KK / Dupont connector | Connects to panel serial port |
 | DC buck step-down (12V → 5V) | Powers ESP from panel's 12VDC rail |
@@ -86,7 +86,7 @@ tailscale:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  # use_address: "100.64.0.X"  # set AFTER first flash + VPN connect
+  # use_address: "100.64.0.X"  # set yours AFTER first flash + successful VPN connect
 
 uart:
   tx_pin: 15    # change if required for your module
@@ -101,7 +101,7 @@ stream_server:
 ```yaml
 wifi_ssid: "YourSSID"
 wifi_password: "YourPassword"
-tailscale_auth_key: "tskey-auth-****"
+tailscale_auth_key: "tskey-auth-****"   # generate one by adding a linux device in the Tailscale/Headscale
 ```
 
 After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboard, then uncomment and set `use_address`.
@@ -113,9 +113,9 @@ After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboar
 | Setting | Value |
 |---|---|
 | `CONNECTION_TYPE` | `IP` |
-| `IP_CONNECTION_HOST` | Tailscale IP of ESP (`100.64.0.X`) |
+| `IP_CONNECTION_HOST` | Your Tailscale IP of ESP (`100.XX.0.X`) |
 | `IP_CONNECTION_PASSWORD` | Panel password (default: `paradox`) |
-| `IP_CONNECTION_BARE` | ✅ Enable (required!) |
+| `IP_CONNECTION_BARE` | ✅ Enable (required!) — this hides under "Show unused optional configuration options" |
 | `MQTT_ENABLE` | ✅ Enable |
 | `MQTT_USERNAME` / `MQTT_PASSWORD` | Match Mosquitto broker user |
 | `MQTT_HOST` | HA's local IP (find with `ha network info`) |
