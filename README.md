@@ -1,4 +1,4 @@
-# gn-alarmoo — Paradox Alarm Wi-Fi & VPN Module (~$10)
+# gn-alarmoo — Paradox Alarm Wi-Fi & VPN Module
 
 Connect a Paradox alarm panel to Home Assistant over Wi-Fi with optional VPN — no port forwarding required.
 
