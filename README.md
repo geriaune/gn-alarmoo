@@ -26,7 +26,7 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 | External Wi-Fi antenna | Optional, helps in poor signal spots |
 | 4-pin Molex KK / Dupont connector | Connects to panel serial port |
 | DC buck step-down (12V → 5V) | Powers ESP from panel's 12VDC rail |
-| USB Type-C connector (with data pins) | For initial flashing |
+| USB Type-C connector (with data pins) | For module power and TX/RX |
 | 24 AWG wire | Low current draw (~1W total) |
 
 **Panel wiring (confirmed for SP7000; swap TX/RX if no connection):**
@@ -40,6 +40,8 @@ Serial on Panel         BUCK              ESP32
 │ AUX+ └╷   == > IN(+)   ->   OUT(+) == > USB 5V
 └───────┘
 ```
+
+You can get one already built here: - [geriaune](http://link.geriaune.pro/gn-alarmoo)
 
 ---
 
