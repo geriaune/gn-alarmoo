@@ -20,9 +20,9 @@ tailscale:
 #  uncomment below config line for headscale self-hosted server, not required for tailscale setup
 #  login_server: "http://vpn.yourhost.com:8080"
 
-# Enable logging
+# Disable logging directly to UART port
 logger:
-  level: INFO
+  baud_rate: 0
 
 # Enable Home Assistant API
 api:
@@ -54,8 +54,8 @@ external_components:
 
 uart:
   - id: paradox_uart
-    tx_pin: 15    # change this if you are using anything other than geriaune.pro built module and using a different GPIO for TX
-    rx_pin: 7     # change this if you are using anything other than geriaune.pro built module and using a different GPIO for RX
+    tx_pin: 19    # change this if you are using anything other than geriaune.pro built module and using a different GPIO for TX
+    rx_pin: 20    # change this if you are using anything other than geriaune.pro built module and using a different GPIO for RX
     baud_rate: 9600
 
 stream_server:

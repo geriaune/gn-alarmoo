@@ -22,6 +22,7 @@ Paradox Panel  ──serial──►  ESP32-S3  ──Wi-Fi──►  [Tailscale
 
 The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alarm Interface (PAI)** app in Home Assistant connects to it, decodes the data, and pushes it to an MQTT broker — making all zones, sensors and PGMs available as HA entities.
 
+> ⚠️ **Important:** When using the Plug-and-Play cable, serial communication over USB is disabled. Logging is available only through Home Assistant. After the initial flash, add the module to Home Assistant and use it for all subsequent flashing and logging operations.
 ---
 
 ## Hardware
@@ -77,6 +78,10 @@ esp32:
   framework:
     type: esp-idf
 
+# Disable logging directly to UART port
+logger:
+  baud_rate: 0
+
 # Tailscale VPN package
 packages:
   tailscale:
@@ -95,8 +100,8 @@ wifi:
   # use_address: "100.64.0.X"  # set yours AFTER first flash + successful VPN connect
 
 uart:
-  tx_pin: 15    # change if required for your module
-  rx_pin: 7     # change if required for your module
+  tx_pin: 19    # change if required for your module
+  rx_pin: 20     # change if required for your module
   baud_rate: 9600
 
 stream_server:
