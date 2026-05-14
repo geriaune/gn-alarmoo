@@ -48,7 +48,7 @@ Serial on Panel         BUCK              ESP32
 └───────┘
 ```
 
-✅ You can get one already built here: - [geriaune](http://link.geriaune.pro/gn-alarmoo)
+✅ You can get one already built here: - [geriaune](https://link.geriaune.pro/gn-alarmoo)
 
 ---
 
@@ -167,4 +167,4 @@ Every re-flash from PC or re-authentication assigns a new Tailscale IP. When tha
 - [esphome-tailscale](https://github.com/Csontikka/esphome-tailscale)
 - [esphome-stream-server](https://github.com/oxan/esphome-stream-server)
 - [Full build article](https://geriaune.pro/howto/2026/05/01/10-paradox-alarm-wi-fi-and-vpn-module/)
-- [Hardware](http://link.geriaune.pro/gn-alarmoo)
+- [Hardware](https://link.geriaune.pro/gn-alarmoo)
