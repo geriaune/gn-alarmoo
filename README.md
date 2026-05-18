@@ -97,8 +97,12 @@ stream_server:
 ...
 ```
 
-> ⚠️ **SP7000 UART baud rate:** `9600`
-> ⚠️ **SP7000+ UART baud rate:** `115200`
+> ⚠️ **Important:** Different panels may have different serial connection speed. Below are ones confirmed working:
+
+| Panel | Baud rate |
+|---|---|
+| `SP7000` | `9600` |
+| `SP7000+` | `115200` |
 
 
 **Secrets to add in ESPHome:**
