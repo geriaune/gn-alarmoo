@@ -124,7 +124,7 @@ After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboar
 | `MQTT_USERNAME` / `MQTT_PASSWORD` | Match Mosquitto broker user |
 | `MQTT_HOST` | HA's local IP (find with `ha network info`) |
 | Port (Network section) | `10000` |
-| `PASSWORD` | `0000` for SP7000 and `a` for SP7000+ |
+| `PASSWORD` | `0000` for SP7000 / `a` for SP7000+ |
 
 > Use the local HA IP (e.g. `192.168.0.222`), not `127.0.0.1` — it won't work inside Docker.
 
