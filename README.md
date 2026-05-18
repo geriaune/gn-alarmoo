@@ -97,8 +97,8 @@ stream_server:
 ...
 ```
 
-⚠️ **SP7000 UART baud rate:** `9600`
-⚠️ **SP7000+ UART baud rate:** `115200`
+> ⚠️ **SP7000 UART baud rate:** `9600`
+> ⚠️ **SP7000+ UART baud rate:** `115200`
 
 
 **Secrets to add in ESPHome:**
