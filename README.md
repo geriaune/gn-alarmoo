@@ -36,7 +36,7 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 | USB Type-C connector (with data pins) | For module power and TX/RX |
 | 24 AWG wire | Low current draw (~1W total) |
 
-**Panel wiring (confirmed for SP7000; swap TX/RX if no connection):**
+**Panel wiring (confirmed for SP7000 and SP7000+; swap TX/RX if no connection):**
 
 ```
 Serial on Panel         BUCK              ESP32
@@ -65,7 +65,7 @@ You also need a free [Tailscale](https://tailscale.com) account, or a self-hoste
 
 ---
 
-## ESPHome Config (`paradox.yaml`)
+## ESPHome Config (`paradox-*.yaml`)
 
 Key settings — see the full file in this repo for the complete config.
 
@@ -88,20 +88,18 @@ tailscale:
   hostname: "paradox"
   # login_server: "http://vpn.yourhost.com:8080"  # headscale only
 
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  # use_address: "100.x.y.z"  # set yours AFTER first flash + successful VPN connect
-
-uart:
-  tx_pin: 19    # change if required for your module
-  rx_pin: 20     # change if required for your module
-  baud_rate: 9600
+external_components:
+  - source: github://oxan/esphome-stream-server
 
 stream_server:
-  port: 10000  # PAI connects here
+  uart_id: paradox_uart
+  port: 10000
 ...
 ```
+
+⚠️ **SP7000 UART baud rate:** `9600`
+⚠️ **SP7000+ UART baud rate:** `115200`
+
 
 **Secrets to add in ESPHome:**
 ```yaml
@@ -119,13 +117,14 @@ After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboar
 | Setting | Value |
 |---|---|
 | `CONNECTION_TYPE` | `IP` |
-| `IP_CONNECTION_HOST` | Your Tailscale IP of ESP (`100.XX.0.X`) |
+| `IP_CONNECTION_HOST` | Your Tailscale IP of ESP (`100.x.y.z`) |
 | `IP_CONNECTION_PASSWORD` | Panel password (default: `paradox`) |
 | `IP_CONNECTION_BARE` | ✅ Enable (⚠️ required!) — this hides under "Show unused optional configuration options" |
 | `MQTT_ENABLE` | ✅ Enable |
 | `MQTT_USERNAME` / `MQTT_PASSWORD` | Match Mosquitto broker user |
 | `MQTT_HOST` | HA's local IP (find with `ha network info`) |
 | Port (Network section) | `10000` |
+| `PASSWORD` | `0000` for SP7000 and `a` for SP7000+ |
 
 > Use the local HA IP (e.g. `192.168.0.222`), not `127.0.0.1` — it won't work inside Docker.
 
