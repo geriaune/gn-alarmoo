@@ -1,7 +1,17 @@
 esphome:
   name: paradox
   friendly_name: paradox
-
+  on_boot:
+    priority: 600             # runs before wifi init
+    then:
+      - light.turn_on:
+          id: rgb_light
+          red: 100%
+          green: 0%
+          blue: 0%
+          brightness: 40%
+          effect: blink
+          
 esp32:
   board: esp32-s3-devkitc-1
   framework:
