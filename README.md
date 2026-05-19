@@ -73,7 +73,7 @@ type: entities
 entities:
   - entity: light.rgb_light
     name: Connection Status LED
-
+```
 ---
 
 ## Software Stack
