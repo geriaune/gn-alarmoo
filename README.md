@@ -52,6 +52,30 @@ Serial on Panel         BUCK              ESP32
 
 ---
 
+## Status LED Indicator
+
+The RGB LED provides visual feedback about the device's connection status:
+
+| State | LED Color | Pattern | Meaning |
+|-------|-----------|---------|---------|
+| Booting | 🔴 Red | Blinking | Device initializing, WiFi not yet available |
+| No WiFi | 🟡 Yellow | Blinking | Device cannot connect to WiFi network |
+| WiFi Only | 🔵 Blue | Solid | Connected to WiFi, VPN is not active |
+| VPN Connected | 🟢 Green | Solid | Connected to WiFi and Tailscale VPN |
+
+### Light Integration
+
+To add the status LED to your Home Assistant dashboard:
+
+```yaml
+# Example Lovelace card configuration
+type: entities
+entities:
+  - entity: light.rgb_light
+    name: Connection Status LED
+
+---
+
 ## Software Stack
 
 Install these as **Home Assistant Apps/Add-ons**:
