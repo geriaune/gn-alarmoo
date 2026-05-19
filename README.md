@@ -101,8 +101,8 @@ stream_server:
 
 | Panel | Baud rate |
 |---|---|
-| `SP7000` | `9600` |
-| `SP7000+` | `115200` |
+| SP7000 | `9600` |
+| SP7000+ | `115200` |
 
 
 **Secrets to add in ESPHome:**
