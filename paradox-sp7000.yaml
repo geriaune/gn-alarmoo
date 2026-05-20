@@ -11,7 +11,7 @@ esphome:
           blue: 0%
           brightness: 40%
           effect: blink
-          
+
 esp32:
   board: esp32-s3-devkitc-1
   framework:
@@ -48,7 +48,6 @@ wifi:
   ssid: !secret wifi_ssid           # change this to your wifi SSID or use fallback AP for wifi settings
   password: !secret wifi_password   # change this to your wifi password or use fallback AP for wifi settings
 #  use_address: "100.x.y.z"        # set this AFTER you flash the ESP and connect to the VPN
-
   on_connect:
     - script.execute: update_light_state
   on_disconnect:
@@ -139,6 +138,23 @@ interval:
   - interval: 30s
     then:
       - script.execute: update_light_state
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: rgb_light  
+    rgb_order: GRB
+    pin: GPIO48
+    num_leds: 1
+    chipset: ws2812
+    name: "Status Light"
+    restore_mode: ALWAYS_OFF
+    effects:
+      - pulse:
+          name: "blink"
+          transition_length: 100ms
+          update_interval: 500ms
+          min_brightness: 0%
+          max_brightness: 100%
 
 sensor:
   - platform: stream_server

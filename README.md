@@ -136,7 +136,7 @@ wifi_password: "YourPassword"
 tailscale_auth_key: "tskey-auth-****"   # generate one by adding a linux device in the Tailscale/Headscale
 ```
 
-After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboard, then uncomment and set `use_address`.
+After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboard, then uncomment and set `use_address` in your ESPHome `paradox.yaml` file.
 
 ---
 
