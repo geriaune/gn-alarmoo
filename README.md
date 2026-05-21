@@ -65,15 +65,7 @@ The RGB LED provides visual feedback about the device's connection status:
 
 ### Light Integration
 
-To add the status LED to your Home Assistant dashboard:
-
-```yaml
-# Example Lovelace card configuration
-type: entities
-entities:
-  - entity: light.rgb_light
-    name: Connection Status LED
-```
+This light can be integrated with Home Assistant; however, there is limited practical value, since the entity status will become “Unavailable” whenever the module loses Wi-Fi/VPN connectivity or stops reporting to Home Assistant.
 ---
 
 ## Software Stack
