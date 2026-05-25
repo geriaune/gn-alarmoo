@@ -66,6 +66,7 @@ The RGB LED provides visual feedback about the device's connection status:
 ## Light Integration
 
 This light can be integrated with Home Assistant; however, there is limited practical value, since the entity status will become “Unavailable” whenever the module loses Wi-Fi/VPN connectivity or stops reporting to Home Assistant.
+
 ---
 
 ## Software Stack
