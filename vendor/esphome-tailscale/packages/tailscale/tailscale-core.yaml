@@ -1,0 +1,25 @@
+esp32:
+  framework:
+    sdkconfig_options:
+      CONFIG_LWIP_TCPIP_TASK_STACK_SIZE: "6144"
+      CONFIG_LWIP_CHECK_THREAD_SAFETY: y
+      CONFIG_LWIP_TCPIP_CORE_LOCKING: n
+
+logger:
+  baud_rate: 921600
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/geriaune/gn-alarmoo
+      ref: main
+    components: [tailscale]
+    refresh: 0s
+
+time:
+  - platform: sntp
+    id: tailscale_time
+    servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+      - 2.pool.ntp.org
