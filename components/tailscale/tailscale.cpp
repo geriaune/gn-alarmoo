@@ -1,8 +1,7 @@
 #include "tailscale.h"
-#include "telemetry.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
-#include "esphome/components/network/util.h"
+#include "esphome/components/wifi/wifi_component.h"
 #ifdef USE_API
 #include "esphome/components/api/api_server.h"
 #endif
@@ -65,7 +64,7 @@ void TailscaleComponent::setup() {
     ESP_LOGI(TAG, "PSRAM detected: %u KB - using large buffers", (unsigned)(psram_size / 1024));
   } else {
     this->psram_available_ = false;
-    ESP_LOGE(TAG, "No PSRAM detected — Tailscale requires PSRAM and will NOT connect on this board.");
+    ESP_LOGW(TAG, "No PSRAM detected — using small buffers (max ~30 peers).");
     ESP_LOGW(TAG, "If your board has PSRAM but it's not initialized, add an explicit psram block to your YAML:");
     ESP_LOGW(TAG, "    psram:");
     ESP_LOGW(TAG, "      mode: octal");
@@ -105,7 +104,7 @@ void TailscaleComponent::setup() {
   }
 #endif
 
-  ESP_LOGI(TAG, "Waiting for network before starting...");
+  ESP_LOGI(TAG, "Waiting for WiFi before starting...");
 }
 
 void TailscaleComponent::start_microlink_() {
@@ -169,23 +168,19 @@ void TailscaleComponent::start_microlink_() {
 
   this->microlink_start_ms_ = millis();
   this->registration_failed_logged_ = false;
-  ESP_LOGI(TAG, "Tailscale started after network connected!");
-
-  // Anonymous telemetry (on by default; opt out with `disable_telemetry: true`).
-  // Network is up here, so the sender task can reach the Cloudflare endpoint.
-  telemetry_init(!this->telemetry_disabled_);
+  ESP_LOGI(TAG, "Tailscale started after WiFi connected!");
 }
 
 void TailscaleComponent::loop() {
-  // Start microlink only after network is connected (and user hasn't disabled)
-  if (this->ml_ == nullptr && network::is_connected()) {
+  // Start microlink only after WiFi is connected (and user hasn't disabled)
+  if (this->ml_ == nullptr && wifi::global_wifi_component->is_connected()) {
     if (this->tailscale_user_enabled_ && !this->vpn_stopping_) {
       this->start_microlink_();
     }
   }
 
-  // Publish static sensor values once after microlink starts (or network connects)
-  if (!this->initial_publish_done_ && network::is_connected()) {
+  // Publish static sensor values once after microlink starts (or WiFi connects)
+  if (!this->initial_publish_done_ && wifi::global_wifi_component->is_connected()) {
     this->initial_publish_done_ = true;
     this->state_changed_ = true;
   }
@@ -275,7 +270,7 @@ void TailscaleComponent::loop() {
     if (now_ms - this->last_hint_ms_ >= HINT_INTERVAL_MS) {
       this->last_hint_ms_ = now_ms;
       if (!this->vpn_ip_str_.empty()) {
-        ESP_LOGI(TAG, "Hint: if ESPHome is offline in Builder, set use_address: \"%s\" in your wifi/ethernet YAML",
+        ESP_LOGI(TAG, "Hint: if ESPHome is offline in Builder, set 'wifi: use_address: \"%s\"' in your YAML",
                  this->vpn_ip_str_.c_str());
       }
       // Peer capacity warnings
@@ -428,7 +423,6 @@ void TailscaleComponent::peer_callback(microlink_t *ml, const microlink_peer_inf
 
 void TailscaleComponent::publish_state_() {
   bool connected = this->is_connected();
-  telemetry_set_connected(connected);
 
 #ifdef USE_BINARY_SENSOR
   if (this->connected_sensor_ != nullptr &&
@@ -533,7 +527,7 @@ void TailscaleComponent::publish_state_() {
     if (vpn_ip.empty()) {
       hint = "Waiting for VPN...";
     } else {
-      hint = "If ESPHome is offline in Builder, set use_address: \"" + vpn_ip + "\" in wifi/ethernet — https://github.com/Csontikka/esphome-tailscale#wifi-use-address";
+      hint = "If ESPHome is offline in Builder, set wifi use_address: \"" + vpn_ip + "\" — https://github.com/Csontikka/esphome-tailscale#wifi-use-address";
     }
     if (this->setup_status_sensor_->state != hint) {
       this->setup_status_sensor_->publish_state(hint);
@@ -966,7 +960,7 @@ std::string TailscaleComponent::detect_ha_route_(std::string *out_ip) {
 void TailscaleComponent::check_ip_config_(const char *vpn_ip) {
   this->vpn_ip_str_ = vpn_ip;
   this->ip_notify_pending_ = true;
-  ESP_LOGI(TAG, "Set use_address: \"%s\" in your wifi/ethernet ESPHome YAML", vpn_ip);
+  ESP_LOGI(TAG, "Set wifi use_address: \"%s\" in your ESPHome YAML", vpn_ip);
 }
 
 void TailscaleComponent::send_ip_notification_() {
@@ -978,7 +972,7 @@ void TailscaleComponent::send_ip_notification_() {
 }
 
 void TailscaleComponent::apply_runtime_auth_key(const std::string &key) {
-  time_t now = ::time(nullptr);
+  time_t now = time(nullptr);
   if (now < 1700000000) {
     ESP_LOGI(TAG, "Time not synced, requesting SNTP sync before saving auth key...");
     esp_sntp_restart();
@@ -991,7 +985,7 @@ void TailscaleComponent::apply_runtime_auth_key(const std::string &key) {
 }
 
 void TailscaleComponent::try_save_auth_key_() {
-  time_t now = ::time(nullptr);
+  time_t now = time(nullptr);
   if (now > 1700000000 || this->auth_key_sync_retries_ >= 5) {
     if (now < 1700000000) {
       ESP_LOGW(TAG, "SNTP sync timed out after 5s, saving auth key without timestamp");
@@ -1006,7 +1000,7 @@ void TailscaleComponent::try_save_auth_key_() {
 
 void TailscaleComponent::save_runtime_auth_key_(const std::string &key) {
   this->reconnect_phase_ = RECONNECT_IDLE;
-  time_t now = ::time(nullptr);
+  time_t now = time(nullptr);
   int64_t timestamp = (now > 1700000000) ? (int64_t)now : 0;
 
   nvs_handle_t nvs;
