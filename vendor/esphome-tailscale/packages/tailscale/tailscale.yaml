@@ -10,13 +10,11 @@ logger:
 
 external_components:
   - source:
-      type: git
-      url: https://github.com/geriaune/gn-alarmoo
-      ref: dev
+      type: local
+      path: ../../../../../components/tailscale
     components: [tailscale]
-    refresh: 0s
 
-# Tailscale component is sourced from this same repository branch
+# Tailscale component is sourced from the local vendored components/tailscale directory
 
 time:
   - platform: sntp
