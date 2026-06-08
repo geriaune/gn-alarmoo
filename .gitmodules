@@ -1,0 +1,6 @@
+[submodule "vendor/esphome-tailscale"]
+	path = vendor/esphome-tailscale
+	url = https://github.com/Csontikka/esphome-tailscale.git
+[submodule "vendor/esphome-stream-server"]
+	path = vendor/esphome-stream-server
+	url = https://github.com/oxan/esphome-stream-server.git
