@@ -11,6 +11,7 @@ logger:
 external_components:
   - source:
       type: local
+      path: ../../../components/tailscale
     components: [tailscale]
 
 # Tailscale component is sourced from local /components/tailscale/ directory
