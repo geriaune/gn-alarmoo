@@ -266,19 +266,86 @@ static int noise_recv(microlink_t *ml, ml_noise_state_t *noise,
 }
 
 /* ============================================================================
+ * URL parsing helper
+ *
+ * Parses ctrl_host which may be any of:
+ *   "controlplane.tailscale.com"          -> host="controlplane.tailscale.com" port="80"
+ *   "vpn.myhost.com:8080"                 -> host="vpn.myhost.com"             port="8080"
+ *   "http://vpn.myhost.com:8080"          -> host="vpn.myhost.com"             port="8080"
+ *   "http://vpn.myhost.com"               -> host="vpn.myhost.com"             port="80"
+ *
+ * out_host must be at least 256 bytes, out_port at least 8 bytes.
+ * ========================================================================== */
+
+static void parse_ctrl_host(const char *ctrl_host,
+                             char *out_host, size_t host_size,
+                             char *out_port, size_t port_size)
+{
+    const char *p = ctrl_host;
+
+    /* Strip scheme: http:// or https:// */
+    if (strncmp(p, "http://", 7) == 0)       p += 7;
+    else if (strncmp(p, "https://", 8) == 0) p += 8;
+
+    /* Find port separator — but skip IPv6 brackets if present */
+    const char *colon = NULL;
+    if (*p == '[') {
+        /* IPv6 literal: [::1]:8080 */
+        const char *bracket = strchr(p, ']');
+        if (bracket) colon = strchr(bracket, ':');
+    } else {
+        colon = strchr(p, ':');
+    }
+
+    if (colon) {
+        /* Copy hostname portion (before the colon) */
+        size_t hlen = (size_t)(colon - p);
+        if (hlen >= host_size) hlen = host_size - 1;
+        strncpy(out_host, p, hlen);
+        out_host[hlen] = '\0';
+
+        /* Copy port portion (after the colon), strip any trailing path */
+        const char *port_start = colon + 1;
+        const char *slash = strchr(port_start, '/');
+        size_t plen = slash ? (size_t)(slash - port_start) : strlen(port_start);
+        if (plen >= port_size) plen = port_size - 1;
+        strncpy(out_port, port_start, plen);
+        out_port[plen] = '\0';
+    } else {
+        /* No colon — just a hostname, use default port 80 */
+        const char *slash = strchr(p, '/');
+        size_t hlen = slash ? (size_t)(slash - p) : strlen(p);
+        if (hlen >= host_size) hlen = host_size - 1;
+        strncpy(out_host, p, hlen);
+        out_host[hlen] = '\0';
+        strncpy(out_port, "80", port_size);
+    }
+
+    /* Safety: if port string is empty fall back to 80 */
+    if (out_port[0] == '\0') strncpy(out_port, "80", port_size);
+}
+
+/* ============================================================================
  * State: DNS_RESOLVE + TCP_CONNECT
  * ========================================================================== */
 
 static int do_tcp_connect(microlink_t *ml) {
     int64_t t_start = esp_timer_get_time();
 
-    ESP_LOGI(TAG, "Resolving %s...", CTRL_HOST(ml));
+    /* Parse ctrl_host into bare hostname + port string so getaddrinfo
+     * receives a plain DNS name, not a full URL with scheme/port embedded. */
+    char ctrl_hostname[256];
+    char ctrl_port[8];
+    parse_ctrl_host(CTRL_HOST(ml), ctrl_hostname, sizeof(ctrl_hostname),
+                                   ctrl_port,    sizeof(ctrl_port));
+
+    ESP_LOGI(TAG, "Resolving %s (port %s)...", ctrl_hostname, ctrl_port);
 
     struct addrinfo hints = { .ai_family = AF_UNSPEC, .ai_socktype = SOCK_STREAM };
     struct addrinfo *res = NULL;
 
-    if (ml_getaddrinfo(CTRL_HOST(ml), "80", &hints, &res) != 0 || !res) {
-        ESP_LOGE(TAG, "DNS resolve failed for %s", CTRL_HOST(ml));
+    if (ml_getaddrinfo(ctrl_hostname, ctrl_port, &hints, &res) != 0 || !res) {
+        ESP_LOGE(TAG, "DNS resolve failed for %s", ctrl_hostname);
         return -1;
     }
 
@@ -310,7 +377,7 @@ static int do_tcp_connect(microlink_t *ml) {
     /* Keep the control-plane socket off the exit-node tunnel (see helper). */
     ml_bind_sock_to_upstream(ml, sock);
 
-    ESP_LOGI(TAG, "Connecting to %s:80...", CTRL_HOST(ml));
+    ESP_LOGI(TAG, "Connecting to %s:%s...", ctrl_hostname, ctrl_port);
 
     if (ml_connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
         ESP_LOGE(TAG, "TCP connect failed: %d", errno);
@@ -359,7 +426,22 @@ static int do_noise_handshake(microlink_t *ml, ml_noise_state_t *noise) {
                            msg1, msg1_len);
     msg1_b64[b64_len] = '\0';
 
-    /* Send HTTP/1.1 Upgrade request with Noise msg1 in header */
+    /* Send HTTP/1.1 Upgrade request with Noise msg1 in header.
+     * The Host header must be a bare "host" or "host:port" value — never
+     * a full URL with scheme. Parse it the same way do_tcp_connect does. */
+    char ctrl_hostname[256];
+    char ctrl_port[8];
+    parse_ctrl_host(CTRL_HOST(ml), ctrl_hostname, sizeof(ctrl_hostname),
+                                   ctrl_port,    sizeof(ctrl_port));
+
+    /* Build Host header value: "host" for port 80, "host:port" otherwise */
+    char host_header[280];
+    if (strcmp(ctrl_port, "80") == 0) {
+        snprintf(host_header, sizeof(host_header), "%s", ctrl_hostname);
+    } else {
+        snprintf(host_header, sizeof(host_header), "%s:%s", ctrl_hostname, ctrl_port);
+    }
+
     char *http_req = ml_psram_malloc(512 + b64_len);
     if (!http_req) return -1;
 
@@ -372,7 +454,7 @@ static int do_noise_handshake(microlink_t *ml, ml_noise_state_t *noise) {
         "X-Tailscale-Handshake: %s\r\n"
         "Content-Length: 0\r\n"
         "\r\n",
-        CTRL_HOST(ml), msg1_b64);
+        host_header, msg1_b64);
 
     ESP_LOGI(TAG, "Sending Noise handshake (msg1=%d bytes, b64=%d chars)", (int)msg1_len, (int)b64_len);
 
