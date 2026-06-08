@@ -66,13 +66,8 @@ esp32:
 logger:
   baud_rate: 921600
 
-external_components:
-  - source:
-      type: git
-      url: https://github.com/Csontikka/esphome-tailscale.git
-      ref: v0.2.1
-    components: [tailscale]
-    refresh: 0s
+# Tailscale component is sourced from local /components/tailscale/ directory
+# (no external_components needed — component is already local)
 
 time:
   - platform: sntp
