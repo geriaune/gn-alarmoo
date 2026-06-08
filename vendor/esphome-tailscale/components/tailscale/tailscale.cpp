@@ -1,5 +1,4 @@
 #include "tailscale.h"
-#include "telemetry.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
 #include "esphome/components/network/util.h"
@@ -170,10 +169,6 @@ void TailscaleComponent::start_microlink_() {
   this->microlink_start_ms_ = millis();
   this->registration_failed_logged_ = false;
   ESP_LOGI(TAG, "Tailscale started after network connected!");
-
-  // Anonymous telemetry (on by default; opt out with `disable_telemetry: true`).
-  // Network is up here, so the sender task can reach the Cloudflare endpoint.
-  telemetry_init(!this->telemetry_disabled_);
 }
 
 void TailscaleComponent::loop() {
@@ -428,7 +423,6 @@ void TailscaleComponent::peer_callback(microlink_t *ml, const microlink_peer_inf
 
 void TailscaleComponent::publish_state_() {
   bool connected = this->is_connected();
-  telemetry_set_connected(connected);
 
 #ifdef USE_BINARY_SENSOR
   if (this->connected_sensor_ != nullptr &&
@@ -978,7 +972,7 @@ void TailscaleComponent::send_ip_notification_() {
 }
 
 void TailscaleComponent::apply_runtime_auth_key(const std::string &key) {
-  time_t now = ::time(nullptr);
+  time_t now = time(nullptr);
   if (now < 1700000000) {
     ESP_LOGI(TAG, "Time not synced, requesting SNTP sync before saving auth key...");
     esp_sntp_restart();
@@ -991,7 +985,7 @@ void TailscaleComponent::apply_runtime_auth_key(const std::string &key) {
 }
 
 void TailscaleComponent::try_save_auth_key_() {
-  time_t now = ::time(nullptr);
+  time_t now = time(nullptr);
   if (now > 1700000000 || this->auth_key_sync_retries_ >= 5) {
     if (now < 1700000000) {
       ESP_LOGW(TAG, "SNTP sync timed out after 5s, saving auth key without timestamp");
@@ -1006,7 +1000,7 @@ void TailscaleComponent::try_save_auth_key_() {
 
 void TailscaleComponent::save_runtime_auth_key_(const std::string &key) {
   this->reconnect_phase_ = RECONNECT_IDLE;
-  time_t now = ::time(nullptr);
+  time_t now = time(nullptr);
   int64_t timestamp = (now > 1700000000) ? (int64_t)now : 0;
 
   nvs_handle_t nvs;
