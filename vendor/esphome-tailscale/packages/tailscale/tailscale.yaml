@@ -12,7 +12,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/geriaune/gn-alarmoo
-      ref: main
+      ref: dev
     components: [tailscale]
     refresh: 0s
 
