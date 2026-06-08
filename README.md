@@ -86,6 +86,11 @@ You also need a free [Tailscale](https://tailscale.com) account, or a self-hoste
 
 Key settings — see the full file in this repo for the complete config.
 
+⚠️ **Important:** :
+> The following pasted Tailscale package and stream server `external_components` code is for the original repositories.
+> The `paradox-*.yaml` files in this repo use explicit refs to my repository for supported alarm panels, so ESPHome upgrades are less likely to break your alarm panel integration.
+> If you want the latest upstream version or a specific release, replace those YAML lines with the code shown below.
+
 ```yaml
 ...
 # Route logging directly to UART0 port (away from default GPIO19/20)
@@ -96,9 +101,9 @@ logger:
 # Tailscale VPN package
 packages:
   tailscale:
-    url: https://github.com/geriaune/gn-alarmoo
+    url: https://github.com/Csontikka/esphome-tailscale
     ref: main
-    files: [vendor/esphome-tailscale/packages/tailscale/tailscale.yaml]
+    files: [packages/tailscale/tailscale.yaml]
     refresh: 0s
 
 tailscale:
@@ -107,12 +112,7 @@ tailscale:
   # login_server: "http://vpn.yourhost.com:8080"  # headscale only
 
 external_components:
-  - source:
-      type: git
-      url: https://github.com/geriaune/gn-alarmoo
-      ref: main
-    components: [stream_server]
-    refresh: 0s
+  - source: github://oxan/esphome-stream-server
 
 stream_server:
   uart_id: paradox_uart
