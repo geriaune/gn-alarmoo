@@ -8,8 +8,12 @@ esp32:
 logger:
   baud_rate: 921600
 
+external_components:
+  - source:
+      type: local
+    components: [tailscale]
+
 # Tailscale component is sourced from local /components/tailscale/ directory
-# (no external_components needed — component is already local)
 
 time:
   - platform: sntp
