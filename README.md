@@ -96,9 +96,10 @@ logger:
 # Tailscale VPN package
 packages:
   tailscale:
-    url: https://github.com/Csontikka/esphome-tailscale
+    url: https://github.com/geriaune/gn-alarmoo
     ref: main
-    files: [packages/tailscale/tailscale.yaml]
+    files: [vendor/esphome-tailscale/packages/tailscale/tailscale.yaml]
+    refresh: 0s
 
 tailscale:
   auth_key: !secret tailscale_auth_key
@@ -106,7 +107,12 @@ tailscale:
   # login_server: "http://vpn.yourhost.com:8080"  # headscale only
 
 external_components:
-  - source: github://oxan/esphome-stream-server
+  - source:
+      type: git
+      url: https://github.com/geriaune/gn-alarmoo
+      ref: main
+    components: [stream_server]
+    refresh: 0s
 
 stream_server:
   uart_id: paradox_uart

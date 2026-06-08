@@ -19,9 +19,9 @@ esp32:
 
 packages:
   tailscale:
-    url: https://github.com/Csontikka/esphome-tailscale
+    url: https://github.com/geriaune/gn-alarmoo
     ref: main
-    files: [packages/tailscale/tailscale.yaml]
+    files: [vendor/esphome-tailscale/packages/tailscale/tailscale.yaml]
     refresh: 0s
 
 tailscale:
@@ -66,7 +66,12 @@ time:
     id: homeassistant_time
 
 external_components:
-  - source: github://oxan/esphome-stream-server
+  - source:
+      type: git
+      url: https://github.com/geriaune/gn-alarmoo
+      ref: main
+    components: [stream_server]
+    refresh: 0s
 
 uart:
   - id: paradox_uart
