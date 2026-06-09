@@ -24,13 +24,21 @@ packages:
     files: [vendor/esphome-tailscale/packages/tailscale/tailscale.yaml]
     refresh: 0s
 
+# Component implementations sourced from the same repository and ref
+external_components:
+  - source:
+      type: git
+      url: https://github.com/geriaune/gn-alarmoo
+      ref: main
+    components: [stream_server, tailscale]
+    refresh: 0s
+
 tailscale:
   auth_key: !secret tailscale_auth_key  # set this in ESPHome App SECRETS, generate it in tailscale/headscale server
   hostname: "paradox"
 #  uncomment below config line for headscale self-hosted server, not required for tailscale setup
 #  login_server: "http://vpn.yourhost.com:8080"
 
-# Route logging directly to UART0 port (away from default GPIO19/20)
 logger:
   hardware_uart: UART0
   baud_rate: 115200
@@ -65,14 +73,6 @@ captive_portal:
 time:
   - platform: homeassistant
     id: homeassistant_time
-
-external_components:
-  - source:
-      type: git
-      url: https://github.com/geriaune/gn-alarmoo
-      ref: main
-    components: [stream_server]
-    refresh: 0s
 
 uart:
   - id: paradox_uart

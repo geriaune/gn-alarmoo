@@ -8,16 +8,6 @@ esp32:
 logger:
   baud_rate: 921600
 
-external_components:
-  - source:
-      type: git
-      url: https://github.com/geriaune/gn-alarmoo
-      ref: main
-    components: [tailscale]
-    refresh: 0s
-
-# Tailscale component is sourced from this same repository branch
-
 time:
   - platform: sntp
     id: tailscale_time
