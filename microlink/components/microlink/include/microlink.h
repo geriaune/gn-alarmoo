@@ -45,12 +45,6 @@ typedef struct {
     uint32_t disco_heartbeat_ms;    /* DISCO keepalive interval (default: 3000) */
     uint32_t stun_interval_ms;      /* STUN re-probe interval (default: 23000) */
     uint32_t ctrl_watchdog_ms;      /* Control plane watchdog timeout (default: 120000) */
-
-    /* Optional custom control plane host (Headscale / Ionscale / self-hosted).
-     * NULL or empty = use the default Tailscale SaaS control plane.
-     * Format: "http(s)://host[:port]" — e.g., "http://192.168.1.100:8080".
-     * If set, this takes priority over any NVS-persisted ctrl_host override. */
-    const char *ctrl_host;
 } microlink_config_t;
 
 /* Peer info (read-only snapshot) */
@@ -172,38 +166,6 @@ int microlink_get_peer_count(const microlink_t *ml);
  * @return ESP_OK if valid index
  */
 esp_err_t microlink_get_peer_info(const microlink_t *ml, int index, microlink_peer_info_t *info);
-
-/**
- * @brief Force all outbound WireGuard packets through the DERP relay callback
- *
- * When enabled, the WG netif skips any cached direct UDP endpoint and routes
- * every outbound packet through the DERP TLS channel. Use this as a fallback
- * when the device is behind a carrier-grade NAT (mobile hotspot, CGNAT) where
- * direct UDP to a peer's public endpoint is silently dropped but DERP still
- * works. Safe to call before microlink_init has built the WG netif — the
- * intent is stored and applied at netif creation.
- */
-void microlink_force_derp_output(microlink_t *ml, bool force);
-
-/**
- * @brief Read the current force_derp_output flag
- * @return true if all outbound WG packets are being routed via DERP
- */
-bool microlink_is_force_derp_output(const microlink_t *ml);
-
-/**
- * @brief Get auth key / node key expiry time (Unix epoch seconds)
- * @param ml Handle
- * @return Expiry timestamp (Unix seconds), or 0 if unknown / no expiry set
- */
-int64_t microlink_get_key_expiry(const microlink_t *ml);
-
-/**
- * @brief Check if auth key / node key is expired
- * @param ml Handle
- * @return true if control plane reported Node.Expired == true
- */
-bool microlink_is_key_expired(const microlink_t *ml);
 
 /**
  * @brief Send UDP data to a peer by VPN IP

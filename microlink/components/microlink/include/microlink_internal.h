@@ -57,11 +57,7 @@ extern "C" {
 
 #define ML_TASK_WG_MGR_STACK    (8 * 1024)
 #define ML_TASK_WG_MGR_PRIO     7
-/* Pinned to CPU 0 (not 1) so the heavy crypto workload (x25519 in
- * wireguard_peer_init and wireguard_create_handshake_initiation, ~500ms each
- * on refc) does not starve ESPHome's loopTask on CPU 1. With 14 SaaS peers
- * back-to-back, leaving wg_mgr on CPU 1 tripped loopTask task_wdt. */
-#define ML_TASK_WG_MGR_CORE     0
+#define ML_TASK_WG_MGR_CORE     1
 
 /* Queue depths */
 #define ML_DERP_TX_QUEUE_DEPTH  16
@@ -246,11 +242,6 @@ typedef struct {
     uint32_t vpn_ip;
     uint8_t public_key[32];
     uint8_t disco_key[32];
-    /* Precomputed NaCl box shared key (x25519 DH of disco_key × our disco_private_key).
-     * Computed once in add_peer() so each DISCO packet only costs Salsa20+Poly1305
-     * instead of a full x25519 scalar-mult (~500ms on ESP32-S3 refc). */
-    uint8_t disco_shared_key[32];
-    bool has_disco_shared_key;
     char hostname[64];
     bool active;
 
@@ -434,14 +425,6 @@ struct microlink_s {
     uint32_t t_stun_interval_ms;
     uint32_t t_ctrl_watchdog_ms;
 
-    /* Sticky force_derp_output intent — set via microlink_force_derp_output()
-     * at any time (even before wg_netif exists). Applied to the live WG device
-     * immediately if wg_netif is ready, and re-applied in
-     * ml_wg_mgr_create_netif() once it becomes ready. This lets callers
-     * preemptively flip the flag on hotspot SSID detection before
-     * microlink_init() has built the WG interface. */
-    bool pending_force_derp_output;
-
     /* Callbacks */
     microlink_state_cb_t state_cb;
     void *state_cb_data;
@@ -459,24 +442,8 @@ struct microlink_s {
     char nvs_device_name[48];
 
     /* Control plane host override (empty = use ML_CTRL_HOST default).
-     * Set from NVS at boot for Headscale/Ionscale/custom coordinators.
-     * May be a bare hostname, "host:port", or "http://host[:port]". */
+     * Set from NVS at boot for Headscale/Ionscale/custom coordinators. */
     char ctrl_host[64];
-
-    /* Parsed host and port from ctrl_host (filled lazily by do_tcp_connect).
-     * ctrl_host_parsed is the bare hostname/IP, ctrl_port_str the port as
-     * decimal string (default "80"), ctrl_host_hdr is the value to use in
-     * HTTP "Host:" / HTTP/2 ":authority" (host, plus ":port" iff non-80). */
-    char ctrl_host_parsed[64];
-    char ctrl_port_str[8];
-    char ctrl_host_hdr[72];
-
-    /* Noise server static public key fetched from the custom control plane
-     * via GET /key?v=88. Valid only when ctrl_noise_pubkey_valid is true;
-     * otherwise ml_noise_init falls back to the hardcoded Tailscale SaaS
-     * server key. */
-    uint8_t ctrl_noise_pubkey[32];
-    bool ctrl_noise_pubkey_valid;
 
     /* Debug flags (bitmask from NVS, checked at runtime for verbose logging) */
     uint8_t debug_flags;  /* bit 0: DISCO, bit 1: WG, bit 2: DERP, bit 3: coord */

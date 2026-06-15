@@ -7,9 +7,6 @@
  */
 
 #include "microlink_internal.h"
-#include "wireguard.h"
-#include "wireguardif.h"
-#include "lwip/netif.h"
 #include "esp_log.h"
 #include "esp_random.h"
 #include "esp_timer.h"
@@ -180,14 +177,6 @@ microlink_t *microlink_init(const microlink_config_t *config) {
     if (ml->config.max_peers > ML_MAX_PEERS) ml->config.max_peers = ML_MAX_PEERS;
     ml->config.enable_derp = true;  /* Always need DERP for relay */
 
-    /* Honor caller-supplied custom control plane (Headscale etc.) immediately,
-     * so it takes priority over the NVS-sourced override applied below. */
-    if (config->ctrl_host && config->ctrl_host[0]) {
-        strncpy(ml->ctrl_host, config->ctrl_host, sizeof(ml->ctrl_host) - 1);
-        ml->ctrl_host[sizeof(ml->ctrl_host) - 1] = '\0';
-        ESP_LOGI(TAG, "Control plane from config: %s", ml->ctrl_host);
-    }
-
     ml->state = ML_STATE_IDLE;
     ml->coord_sock = -1;
     ml->disco_sock4 = -1;
@@ -270,14 +259,10 @@ microlink_t *microlink_init(const microlink_config_t *config) {
             microlink_ip_to_str(nvs_pip, pip_str);
             ESP_LOGI(TAG, "Priority peer overridden from NVS: %s", pip_str);
         }
-        /* NVS ctrl_host is a fallback only — don't clobber a config-supplied value */
-        if (ml->ctrl_host[0] == '\0') {
-            const char *nvs_ctrl = ml_config_get_ctrl_host(ml->config_httpd);
-            if (nvs_ctrl) {
-                strncpy(ml->ctrl_host, nvs_ctrl, sizeof(ml->ctrl_host) - 1);
-                ml->ctrl_host[sizeof(ml->ctrl_host) - 1] = '\0';
-                ESP_LOGI(TAG, "Control plane overridden from NVS: %s", ml->ctrl_host);
-            }
+        const char *nvs_ctrl = ml_config_get_ctrl_host(ml->config_httpd);
+        if (nvs_ctrl) {
+            strncpy(ml->ctrl_host, nvs_ctrl, sizeof(ml->ctrl_host) - 1);
+            ESP_LOGI(TAG, "Control plane overridden from NVS: %s", ml->ctrl_host);
         }
         ml->debug_flags = ml_config_get_debug_flags(ml->config_httpd);
         if (ml->debug_flags) {
@@ -623,43 +608,6 @@ esp_err_t microlink_get_peer_info(const microlink_t *ml, int index, microlink_pe
     info->online = p->active;
     info->direct_path = p->has_direct_path;
     return ESP_OK;
-}
-
-void microlink_force_derp_output(microlink_t *ml, bool force) {
-    if (!ml) return;
-    /* Store the intent unconditionally so that early callers (e.g. a
-     * wifi.on_connect hook flipping force_derp on a hotspot SSID BEFORE
-     * microlink_init has created the WG netif) don't get dropped.
-     * ml_wg_mgr_create_netif applies pending_force_derp_output once the
-     * netif exists, and is_force_derp_output reads this field, keeping
-     * intent and live state in agreement. */
-    ml->pending_force_derp_output = force;
-    if (!ml->wg_netif) {
-        ESP_LOGW(TAG, "force_derp_output=%d stored (WG netif not ready yet — will apply on init)",
-                 force ? 1 : 0);
-        return;
-    }
-    struct netif *netif = (struct netif *)ml->wg_netif;
-    wireguardif_force_derp_output(netif, force);
-    ESP_LOGW(TAG, "force_derp_output=%d (all outbound WG packets via DERP%s)",
-             force ? 1 : 0, force ? " — CGNAT fallback" : "");
-}
-
-bool microlink_is_force_derp_output(const microlink_t *ml) {
-    if (!ml) return false;
-    /* Return the stored intent rather than the live WG device flag.
-     * Before wg_netif exists, the intent is the only truth. After it does,
-     * pending_force_derp_output is kept in sync by every setter path (the
-     * public API here, and the re-apply in ml_wg_mgr_create_netif). */
-    return ml->pending_force_derp_output;
-}
-
-int64_t microlink_get_key_expiry(const microlink_t *ml) {
-    return ml ? ml->key_expiry_epoch : 0;
-}
-
-bool microlink_is_key_expired(const microlink_t *ml) {
-    return ml ? ml->key_expired : false;
 }
 
 /* ============================================================================

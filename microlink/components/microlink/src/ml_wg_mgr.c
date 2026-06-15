@@ -301,21 +301,12 @@ static esp_err_t wg_init_interface(microlink_t *ml) {
         ESP_LOGI(TAG, "Cellular mode: at_socket_ready=%d, force_derp=%d", at_ready, at_ready);
         if (at_ready) {
             wireguardif_force_derp_output(netif, true);
-            ml->pending_force_derp_output = true;
             ESP_LOGI(TAG, "Cellular AT socket: forcing DERP output (direct UDP disabled)");
         } else {
             ESP_LOGI(TAG, "Cellular PPP mode: direct UDP ENABLED");
         }
     }
 #endif
-
-    /* Apply any pending_force_derp_output intent set *before* this netif
-     * existed (e.g. a wifi.on_connect hook preemptively flipping the flag on
-     * a hotspot SSID prior to microlink_init completing). */
-    if (ml->pending_force_derp_output) {
-        wireguardif_force_derp_output(netif, true);
-        ESP_LOGW(TAG, "force_derp_output=1 applied at WG netif creation (pending intent from pre-init)");
-    }
 
     ml->wg_netif = netif;
 
@@ -447,13 +438,6 @@ static int add_peer(microlink_t *ml, const ml_peer_update_t *update) {
     p->vpn_ip = update->vpn_ip;
     memcpy(p->public_key, update->public_key, 32);
     memcpy(p->disco_key, update->disco_key, 32);
-    /* Precompute NaCl box shared key once — turns every subsequent DISCO
-     * packet into cheap Salsa20+Poly1305 (no more 500ms x25519 per ping). */
-    p->has_disco_shared_key = false;
-    if (nacl_box_beforenm(p->disco_shared_key, p->disco_key,
-                          ml->disco_private_key) == 0) {
-        p->has_disco_shared_key = true;
-    }
     strncpy(p->hostname, update->hostname, sizeof(p->hostname) - 1);
     p->hostname[sizeof(p->hostname) - 1] = '\0';
     p->derp_region = update->derp_region;
@@ -626,19 +610,12 @@ static void remove_peer(microlink_t *ml, const ml_peer_update_t *update) {
 }
 
 static void process_peer_updates(microlink_t *ml) {
-    /* Process at most ONE ML_PEER_ADD per call — add_peer() does synchronous
-     * NVS flash writes (~200ms each, cache disabled) plus WG add + DISCO setup.
-     * Draining 14 initial peers in a tight loop starves IDLE for ~3s and trips
-     * task_wdt. Returning after one add lets the outer loop's vTaskDelay(10)
-     * yield between peers; cheap ops (REMOVE, UPDATE_ENDPOINT) keep draining. */
     ml_peer_update_t *update;
     while (xQueueReceive(ml->peer_update_queue, &update, 0) == pdTRUE) {
         if (!update) continue;
-        bool was_add = false;
         switch (update->action) {
         case ML_PEER_ADD:
             add_peer(ml, update);
-            was_add = true;
             break;
         case ML_PEER_REMOVE:
             remove_peer(ml, update);
@@ -667,11 +644,6 @@ static void process_peer_updates(microlink_t *ml) {
             break;
         }
         free(update);
-        if (was_add) {
-            /* Bail after one expensive add — outer loop's vTaskDelay(10)
-             * yields before the next peer, keeping IDLE alive. */
-            return;
-        }
     }
 }
 
@@ -698,15 +670,10 @@ static void disco_build_ping(microlink_t *ml, int peer_idx,
     uint8_t nonce[DISCO_NONCE_LEN];
     esp_fill_random(nonce, DISCO_NONCE_LEN);
 
-    /* Encrypt with NaCl box using precomputed shared key (no x25519 here). */
+    /* Encrypt with NaCl box: our disco private key -> peer's disco public key */
     uint8_t ciphertext[46 + NACL_BOX_MACBYTES];
-    if (p->has_disco_shared_key) {
-        nacl_box_afternm(ciphertext, plaintext, sizeof(plaintext), nonce,
-                         p->disco_shared_key);
-    } else {
-        nacl_box(ciphertext, plaintext, sizeof(plaintext), nonce,
-                 p->disco_key, ml->disco_private_key);
-    }
+    nacl_box(ciphertext, plaintext, sizeof(plaintext), nonce,
+             p->disco_key, ml->disco_private_key);
 
     /* Build packet: magic(6) + our_disco_pubkey(32) + nonce(24) + ciphertext(62) = 124 bytes */
     size_t pos = 0;
@@ -764,15 +731,10 @@ static void disco_build_pong(microlink_t *ml, int peer_idx,
     uint8_t nonce[DISCO_NONCE_LEN];
     esp_fill_random(nonce, DISCO_NONCE_LEN);
 
-    /* Encrypt — reuse cached shared key if we have one. */
+    /* Encrypt */
     uint8_t ciphertext[32 + NACL_BOX_MACBYTES];
-    if (p->has_disco_shared_key) {
-        nacl_box_afternm(ciphertext, plaintext, sizeof(plaintext), nonce,
-                         p->disco_shared_key);
-    } else {
-        nacl_box(ciphertext, plaintext, sizeof(plaintext), nonce,
-                 p->disco_key, ml->disco_private_key);
-    }
+    nacl_box(ciphertext, plaintext, sizeof(plaintext), nonce,
+             p->disco_key, ml->disco_private_key);
 
     /* Build packet */
     size_t pos = 0;
@@ -1044,7 +1006,7 @@ static void process_disco_pong(microlink_t *ml, const ml_rx_packet_t *pkt,
         for (int i = 0; i < MAX_PENDING_PROBES; i++) {
             if (pending_probes[i].active) active_count++;
         }
-        ESP_LOGI(TAG, "DISCO PONG unmatched from %s (via %s) txid=%02x%02x%02x%02x, active_probes=%d",
+        ESP_LOGW(TAG, "DISCO PONG unmatched from %s (via %s) txid=%02x%02x%02x%02x, active_probes=%d",
                  name, pkt->via_derp ? "DERP" : "direct",
                  txid[0], txid[1], txid[2], txid[3], active_count);
     }
@@ -1076,19 +1038,9 @@ static void process_disco_packet(microlink_t *ml, const ml_rx_packet_t *pkt) {
     uint8_t *plaintext = malloc(plaintext_len);
     if (!plaintext) return;
 
-    /* Try cached shared key first (avoids x25519 on every RX). */
-    int decrypt_ret = -1;
-    int sender_idx = find_peer_by_disco_key(ml, sender_disco_key);
-    if (sender_idx >= 0 && ml->peers[sender_idx].has_disco_shared_key) {
-        decrypt_ret = nacl_box_open_afternm(plaintext, ciphertext, ciphertext_len,
-                                            nonce, ml->peers[sender_idx].disco_shared_key);
-    }
-    if (decrypt_ret != 0) {
-        decrypt_ret = nacl_box_open(plaintext, ciphertext, ciphertext_len, nonce,
-                                    sender_disco_key, ml->disco_private_key);
-    }
-    if (decrypt_ret != 0) {
-        ESP_LOGI(TAG, "DISCO decrypt failed");
+    if (nacl_box_open(plaintext, ciphertext, ciphertext_len, nonce,
+                      sender_disco_key, ml->disco_private_key) != 0) {
+        ESP_LOGW(TAG, "DISCO decrypt failed");
         free(plaintext);
         return;
     }
@@ -1319,13 +1271,8 @@ static void disco_send_call_me_maybe(microlink_t *ml, int peer_idx) {
     esp_fill_random(nonce, DISCO_NONCE_LEN);
 
     uint8_t ciphertext[sizeof(plaintext) + NACL_BOX_MACBYTES];
-    if (p->has_disco_shared_key) {
-        nacl_box_afternm(ciphertext, plaintext, pt_len, nonce,
-                         p->disco_shared_key);
-    } else {
-        nacl_box(ciphertext, plaintext, pt_len, nonce,
-                 p->disco_key, ml->disco_private_key);
-    }
+    nacl_box(ciphertext, plaintext, pt_len, nonce,
+             p->disco_key, ml->disco_private_key);
 
     /* Build packet: magic(6) + disco_pubkey(32) + nonce(24) + ciphertext */
     uint8_t pkt[256];
