@@ -38,7 +38,7 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 | USB Type-C connector (with data pins) | For module power and TX/RX |
 | 24 AWG wire | Low current draw (~1W total) |
 
-**Panel wiring (confirmed for SP7000 and SP7000+; swap TX/RX if no connection):**
+**Panel wiring (confirmed for SP6000/SP7000 and SP7000+; swap TX/RX if no connection):**
 
 ```
 Serial on Panel         BUCK              ESP32
@@ -127,7 +127,7 @@ stream_server:
 
 | Panel | Baud rate |
 |---|---|
-| SP7000 | `9600` |
+| SP6000/SP7000 | `9600` |
 | SP7000+ | `115200` |
 
 
@@ -153,7 +153,7 @@ After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboar
 | `MQTT_ENABLE` | ✅ Enable |
 | `MQTT_USERNAME` / `MQTT_PASSWORD` | Match Mosquitto broker user |
 | `MQTT_HOST` | HA's local IP (find with `ha network info`) |
-| `PASSWORD` | for SP7000: `0000` / for SP7000+: `a` |
+| `PASSWORD` | for SP6000/SP7000: `0000` / for SP7000+: `a` |
 | Port (Network section) | `10000` |
 
 > Use the local HA IP (e.g. `192.168.0.222`), not `127.0.0.1` — it won't work inside Docker.
