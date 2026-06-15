@@ -1,3 +1,5 @@
+# Confirmed working on these firmware versions:
+# - Paradox SP7000+ Firmware: 
 esphome:
   name: paradox
   friendly_name: paradox
@@ -90,7 +92,7 @@ stream_server:
 binary_sensor:
   - platform: stream_server
     connected:
-      name: Paradox UART
+      name: "Paradox UART"
 
 # Mirror sensor to trigger automations when tailscale state changes
   - platform: template
