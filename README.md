@@ -52,7 +52,7 @@ Serial on Panel         BUCK              ESP32
 
 ✅ You can get one already built here: - [geriaune](https://link.geriaune.pro/gn-alarmoo)
 
-!(images/gn-alarmoo-made.jpg)
+![gn-alarmoo module v2](images/gn-alarmoo-made.jpg)
 ---
 
 ## Status LED Indicator
