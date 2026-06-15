@@ -23,6 +23,7 @@ Paradox Panel  ──serial──►  ESP32-S3  ──Wi-Fi──►  [Tailscale
 The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alarm Interface (PAI)** app in Home Assistant connects to it, decodes the data, and pushes it to an MQTT broker — making all zones, sensors and PGMs available as HA entities.
 
 > ⚠️ **Important:** When using the Plug-and-Play cable, serial communication over USB must be redirected to `UART0` — making GPIO19/20 available for panel communication (port marked as "USB") 
+> "Exit Node" MUST be enabled for the Home Assistant Tailscale App (default) when your ESP is behind heavily restricted NAT or cellular internet! Traffic must be routed through HA in these situations; otherwise, the module will not be reachable from other Headscale nodes. This is also the preferred configuration in general.
 ---
 
 ## Hardware
