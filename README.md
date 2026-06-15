@@ -31,7 +31,7 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 
 | Part | Notes |
 |---|---|
-| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash is required for VPN support |
+| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash and 8MB PSRAM is required for VPN support |
 | External Wi-Fi antenna | Optional, helps in poor signal spots |
 | 4-pin Molex KK / Dupont connector | Connects to panel serial port |
 | DC buck step-down (12V → 5V) | Powers ESP from panel's 12VDC rail |
