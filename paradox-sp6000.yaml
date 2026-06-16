@@ -171,11 +171,11 @@ light:
 sensor:
   - platform: stream_server
     connection_count:
-      name: Number of UART connections
+      name: "Number of UART connections"
 
     # WiFi Signal sensor.
   - platform: wifi_signal
-    name: WiFi Signal
+    name: "WiFi Signal"
     update_interval: 60s
 
   - platform: uptime
