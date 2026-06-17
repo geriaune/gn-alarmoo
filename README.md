@@ -200,7 +200,6 @@ This component provides the ESPHome and ESP32 integration only. The wire protoco
 - [esphome-tailscale](https://github.com/Csontikka/esphome-tailscale)
 - [MicroLink v2 — ESP32 Tailscale Client](https://github.com/CamM2325/microlink)
 - [esphome-stream-server](https://github.com/oxan/esphome-stream-server)
-
 - [Full build article](https://geriaune.pro/howto/2026/05/01/10-paradox-alarm-wi-fi-and-vpn-module/)
 - [Hardware](https://link.geriaune.pro/gn-alarmoo)
 
