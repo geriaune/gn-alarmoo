@@ -49,10 +49,9 @@ void StreamServerComponent::loop() {
 void StreamServerComponent::dump_config() {
     ESP_LOGCONFIG(TAG, "Stream Server:");
 #if ESPHOME_VERSION_CODE >= VERSION_CODE(2025, 11, 0)
-    std::string address(70, '\0');
-    auto address_span = std::span<char, 70>(address.data(), address.size());
-    address.resize(esphome::network::get_use_address_to(address_span));
-    ESP_LOGCONFIG(TAG, "  Address: %s:%u", address.c_str(), this->port_);
+    char address[70];
+    auto address_span = std::span<char, 70>(address, sizeof(address));
+    ESP_LOGCONFIG(TAG, "  Address: %s:%u", esphome::network::get_use_address_to(address_span), this->port_);
 #else
     ESP_LOGCONFIG(TAG, "  Address: %s:%u", esphome::network::get_use_address().c_str(), this->port_);
 #endif
