@@ -70,6 +70,9 @@
 #define REJECT_AFTER_TIME			(180)
 #define REKEY_TIMEOUT				(5)
 #define KEEPALIVE_TIMEOUT			(10)
+/* Max consecutive handshake init attempts before giving up (matches
+ * wireguard-go MAX_TIMER_HANDSHAKES). 18 × REKEY_TIMEOUT = 90s total. */
+#define MAX_HANDSHAKE_ATTEMPTS		(18)
 
 // DERP relay output callback for peers without direct endpoints
 // peer_public_key: 32-byte public key to identify the destination peer
@@ -180,6 +183,13 @@ struct wireguard_peer {
 
 	// We set this flag on RX/TX of packets if we think that we should initiate a new handshake
 	bool send_handshake;
+
+	// Consecutive handshake init attempts since last successful session.
+	// Incremented in wireguard_start_handshake(), reset in wireguard_start_session().
+	// When >= MAX_HANDSHAKE_ATTEMPTS, should_send_initiation() stops emitting
+	// to avoid wasted retries against peers that have us trimmed. Outgoing
+	// traffic (ERR_CONN path in wireguardif_output_to_peer) re-arms.
+	uint8_t handshake_attempts;
 };
 
 struct wireguard_device {

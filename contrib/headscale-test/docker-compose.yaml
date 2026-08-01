@@ -1,0 +1,19 @@
+services:
+  headscale:
+    image: headscale/headscale:0.23.0
+    container_name: headscale-test
+    restart: unless-stopped
+    command: serve
+    ports:
+      # Port 80 is not a typo — microlink hardcodes TCP 80 for the control
+      # plane (ml_coord.c:230), so the host side must also bind 80 to match.
+      - "80:80"
+      - "9090:9090"
+    volumes:
+      - ./config:/etc/headscale
+      - headscale-data:/var/lib/headscale
+    environment:
+      - TZ=UTC
+
+volumes:
+  headscale-data:
