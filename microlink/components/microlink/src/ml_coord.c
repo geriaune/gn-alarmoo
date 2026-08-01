@@ -294,7 +294,7 @@ static int parse_pubkey_response(const char *resp, uint8_t pubkey_out[32]) {
 }
 
 /* Open a short-lived connection to host:port (plain TCP or TLS per
- * ml->use_tls), GET /key?v=88, parse the JSON body, extract publicKey,
+ * ml->use_tls), GET /key?v=ML_CTRL_PROTOCOL_VER, parse the JSON body, extract publicKey,
  * hex-decode into ml->ctrl_noise_pubkey.  Returns 0 on success, -1 on any
  * failure.  Closes its own socket / destroys its own transient TLS handle. */
 static int fetch_server_pubkey(microlink_t *ml, const char *host, const char *port) {
@@ -303,7 +303,7 @@ static int fetch_server_pubkey(microlink_t *ml, const char *host, const char *po
     /* The handle is local — never stored in ml.                           */
     /* ------------------------------------------------------------------ */
     if (ml->use_tls) {
-        ESP_LOGI(TAG, "Fetching Noise server pubkey from https://%s:%s/key?v=88", host, port);
+        ESP_LOGI(TAG, "Fetching Noise server pubkey from https://%s:%s/key?v=%d", host, port, ML_CTRL_PROTOCOL_VER);
 
         const esp_tls_cfg_t cfg = {
             .crt_bundle_attach = esp_crt_bundle_attach,
@@ -328,12 +328,12 @@ static int fetch_server_pubkey(microlink_t *ml, const char *host, const char *po
         const char *host_hdr = (ml->ctrl_host_hdr[0]) ? ml->ctrl_host_hdr : host;
         char req[256];
         int req_len = snprintf(req, sizeof(req),
-            "GET /key?v=88 HTTP/1.1\r\n"
+            "GET /key?v=%d HTTP/1.1\r\n"
             "Host: %s\r\n"
             "User-Agent: microlink\r\n"
             "Connection: close\r\n"
             "\r\n",
-            host_hdr);
+            ML_CTRL_PROTOCOL_VER, host_hdr);
         if (req_len <= 0 || req_len >= (int)sizeof(req)) {
             ESP_LOGE(TAG, "fetch_server_pubkey: request snprintf overflow");
             esp_tls_conn_destroy(tls);
@@ -409,12 +409,12 @@ static int fetch_server_pubkey(microlink_t *ml, const char *host, const char *po
 
     char req[256];
     int req_len = snprintf(req, sizeof(req),
-        "GET /key?v=88 HTTP/1.1\r\n"
+        "GET /key?v=%d HTTP/1.1\r\n"
         "Host: %s\r\n"
         "User-Agent: microlink\r\n"
         "Connection: close\r\n"
         "\r\n",
-        (ml->ctrl_host_hdr[0]) ? ml->ctrl_host_hdr : host);
+        ML_CTRL_PROTOCOL_VER, (ml->ctrl_host_hdr[0]) ? ml->ctrl_host_hdr : host);
     if (req_len <= 0 || req_len >= (int)sizeof(req)) goto out;
 
     if (ml_send(sock, (uint8_t *)req, req_len, 0) != req_len) {

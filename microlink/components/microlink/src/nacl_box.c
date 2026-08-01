@@ -178,6 +178,8 @@ static void hsalsa20(uint8_t *out, const uint8_t *nonce, const uint8_t *key) {
 
 /* XSalsa20 stream cipher - uses HSalsa20 for subkey derivation */
 static void xsalsa20(uint8_t *out, const uint8_t *in, size_t len,
+                     const uint8_t *nonce, const uint8_t *key) __attribute__((unused));
+static void xsalsa20(uint8_t *out, const uint8_t *in, size_t len,
                      const uint8_t *nonce, const uint8_t *key) {
     uint8_t subkey[32];
     uint8_t block[64];

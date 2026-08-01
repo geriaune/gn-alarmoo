@@ -87,6 +87,7 @@ static int hpack_literal_indexed(uint8_t *out, int name_index,
 }
 
 /* HPACK literal header without indexing, new name */
+static int hpack_literal_new(uint8_t *out, const char *name, const char *value) __attribute__((unused));
 static int hpack_literal_new(uint8_t *out, const char *name, const char *value) {
     int pos = 0;
     out[pos++] = 0x00;  /* Literal without indexing, new name */
