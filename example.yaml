@@ -1,0 +1,79 @@
+esphome:
+  name: esp32-tailscale
+  friendly_name: "ESP32 Tailscale"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+# Pull the tailscale component + all entities from the GitHub package.
+# This is exactly what an end user would do — guarantees the build output
+# matches what users get when they include the package. `refresh: always`
+# disables the default 1-day cache so dev flashes always see the latest main.
+packages:
+  tailscale:
+    url: https://github.com/Csontikka/esphome-tailscale
+    ref: main
+    refresh: always
+    files:
+      - packages/tailscale/tailscale.yaml
+
+# PSRAM init — uncomment the block matching your hardware (the
+# `esp32-s3-devkitc-1` board defaults configure octal/80MHz, which works
+# only on N8R8 / N16R8 modules — quad-PSRAM N8R2 / N16R2 boards need an
+# explicit override). Note: ESPHome's `psram:` block forces the configured
+# mode, it does NOT auto-detect; the octal block does NOT work on quad
+# hardware and vice versa. See README → Troubleshooting → "Device Memory
+# shows Internal RAM" if PSRAM detection seems wrong.
+#
+# For N8R8 / N16R8 modules (8 MB Octal PSRAM, most common):
+# psram:
+#   mode: octal
+#   speed: 80MHz
+#
+# For N8R2 / N16R2 modules (2 MB Quad PSRAM):
+# psram:
+#   mode: quad
+#   speed: 40MHz
+
+tailscale:
+  auth_key: !secret tailscale_auth_key
+  hostname: "esp32-tailscale"
+  # max_peers: 16  # Optional, default 16
+  # login_server: "http://192.168.1.42:8080"  # Optional, for Headscale / self-hosted control plane
+  #                                           # See contrib/headscale-test/ for a local docker-compose
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # use_address: "100.x.x.x"  # Set to your Tailscale VPN IP after first boot
+
+# --- Ethernet instead of WiFi? ---
+# The tailscale component works over Ethernet too — it only needs *some*
+# network, not WiFi specifically. On a wired board (e.g. Waveshare
+# ESP32-S3-ETH, or any LAN8720 / W5500 design), DELETE the `wifi:` block
+# above and use an `ethernet:` block instead. Pin `use_address` here, not
+# under wifi. Adjust pins to match your board.
+#
+# ethernet:
+#   type: W5500            # or LAN8720, etc.
+#   clk_pin: GPIO13
+#   mosi_pin: GPIO11
+#   miso_pin: GPIO12
+#   cs_pin: GPIO14
+#   interrupt_pin: GPIO10
+#   reset_pin: GPIO9
+#   # use_address: "100.x.x.x"  # Set to your Tailscale VPN IP after first boot
+
+logger:
+  level: DEBUG
+  hardware_uart: UART0
+
+api:
+
+web_server:
+  port: 80
+
+ota:
+  platform: esphome
