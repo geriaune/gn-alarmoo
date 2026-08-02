@@ -2,13 +2,80 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
-once a `1.0.0` release is cut. While the version is still in the `0.x` range,
-**minor version bumps may include breaking changes** — pin to a specific tag
-(not `ref: main`) in your `packages:` block if you need stability.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+**This is `geriaune/gn-alarmoo`, a fork of [Csontikka/esphome-tailscale](https://github.com/Csontikka/esphome-tailscale).**
+Entries from **v2.0.0 onward** are this fork's own changes, versioned independently
+of upstream. Everything below `v2.0.0` (the `0.x` entries) is upstream
+`esphome-tailscale`'s changelog, kept for reference/history since this project
+vendors that code — those version numbers and issue/PR links refer to the
+**upstream repository**, not this one.
 
 ## [Unreleased]
+
+## [2.0.0] — 2026-08-03
+
+Fork-specific release. Builds on top of vendored upstream `esphome-tailscale`
+(`0.5.4`) and `esphome-stream-server`, patched to keep working on current
+ESPHome and to remove telemetry entirely.
+
+### Removed
+- **Anonymous telemetry removed entirely.** Upstream's device-side telemetry
+  sender (`components/tailscale/telemetry.{h,cpp}`), its hooks in
+  `tailscale.cpp`/`tailscale.h`, the `disable_telemetry` YAML option, and the
+  now-unused `esp_http_client` include were all removed — the firmware no
+  longer sends anything to anyone. The Cloudflare Worker collector backend
+  (`telemetry/worker.js`, `telemetry/wrangler.toml`, admin dashboard doc) was
+  also deleted from the repo. Applied identically to the vendored
+  `vendor/esphome-tailscale` mirror. This was on by default upstream from
+  `0.4.0` onward (see the `0.4.x` entries below); this fork ships with it
+  gone rather than merely disabled.
+
+### Fixed
+- **Builds against current ESPHome again.** Vendored `stream_server`
+  (originally `oxan/esphome-stream-server`) called
+  `esphome::network::get_use_address()`, removed in ESPHome ≥ 2025.11.0 in
+  favor of `get_use_address_to()`. Upstream `esphome-stream-server` does not
+  build on current ESPHome as a result. Patched to use the current
+  span-based `_to()` API (matching the pattern already used for
+  `socket::getpeername_to()` in the same file), including the correct
+  buffer size the new API actually requires. Verified building on ESPHome
+  2026.5.3.
+- **Headscale handshake version mismatch ("unsupported client version").**
+  `fetch_server_pubkey()` in the vendored microlink requested `/key?v=88`
+  while the Noise handshake itself declared protocol v131 — Headscale ≥ 0.24
+  (minimum supported client cap version 113) rejected the pubkey fetch
+  before the handshake could start. Both request paths now consistently use
+  `ML_CTRL_PROTOCOL_VER` (`microlink/components/microlink/src/ml_coord.c`,
+  `ml_h2.c`, `nacl_box.c`).
+- **Component loading no longer double-fetches upstream.** The vendored
+  `tailscale.yaml`/`tailscale-core.yaml` packages still carried their
+  original `external_components:` block pointing at
+  `Csontikka/esphome-tailscale.git@main`, so ESPHome fetched upstream on
+  every build even though `paradox-*.yaml` already sources components from
+  this repo. Removed the redundant block — component loading is now
+  declared in exactly one place.
+
+### Changed
+- **`stream_server` and `microlink` fully vendored into this repo**
+  (`vendor/esphome-stream-server`, `microlink/`) with `paradox-*.yaml`
+  pointing `packages:`/`external_components:` at this repo's own `dev` ref
+  instead of upstream, so an upstream break can't take down your build
+  without you choosing to re-sync.
+- **microlink updated** to a newer `CamM2325/microlink` snapshot.
+
+### Documentation
+- Added per-panel confirmed-working config files: `paradox-sp6000.yaml`,
+  `paradox-sp7000.yaml`, `paradox-sp7000+.yaml`, each noting the panel
+  firmware version it was verified against.
+- README: documented the tested software/hardware stack (Headscale,
+  Tailscale, ESPHome Device Builder, and hardware module versions), an
+  "About This Fork" section summarizing the differences from upstream, and
+  the "Exit Node" HA guidance for restricted-NAT/cellular setups.
+
+---
+
+<!-- Everything below this line is upstream Csontikka/esphome-tailscale history. -->
 
 ## [0.5.4] — 2026-07-29
 
@@ -882,4 +949,7 @@ verified. Treat them as the honest answer to "can I rely on this for X?"
 ---
 
 <!-- Link references for the Keep a Changelog tooling -->
-[Unreleased]: https://github.com/Csontikka/esphome-tailscale/commits/main
+[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.0...dev
+[2.0.0]: https://github.com/geriaune/gn-alarmoo/compare/v1.1.1...v2.0.0
+
+<!-- The [0.x] links below are upstream Csontikka/esphome-tailscale references. -->

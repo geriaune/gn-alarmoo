@@ -92,6 +92,38 @@ Last test performed with:
 
 ---
 
+## About This Fork
+
+This repo vendors and patches the upstream `esphome-tailscale` and
+`esphome-stream-server` components rather than pulling them live from
+upstream, so an upstream change can't unexpectedly break your build. Notable
+differences from upstream as of **v2.0.0**:
+
+- **Builds on current ESPHome.** Upstream `oxan/esphome-stream-server` calls
+  `esphome::network::get_use_address()`, which was renamed/removed in ESPHome
+  ≥ 2025.11.0 (replaced by `get_use_address_to()`) — upstream fails to
+  compile on recent ESPHome versions. This fork's vendored `stream_server`
+  component is patched to use the current API, so `paradox-*.yaml` builds
+  cleanly on current ESPHome (last verified: 2026.5.3).
+- **No telemetry.** Anonymous telemetry (on by default upstream, phoning
+  home to a Cloudflare Worker on boot and roughly daily) has been removed
+  entirely — both the device-side sender and the collector backend. Nothing
+  is sent anywhere by this firmware.
+- **Fixed Headscale handshake version mismatch.** The Noise pubkey fetch was
+  hardcoded to request `/key?v=88` while the handshake itself declared a
+  newer protocol version, so Headscale ≥ 0.24 rejected the connection with
+  "unsupported client version." Both request paths now consistently use the
+  same protocol version.
+- Per-panel configs (`paradox-sp6000.yaml`, `paradox-sp7000.yaml`,
+  `paradox-sp7000+.yaml`) confirmed against real hardware, with the tested
+  software/hardware stack documented above.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full history — upstream's changelog
+entries are kept for reference, with this fork's own changes called out
+separately at the top.
+
+---
+
 ## ESPHome Config (`paradox-*.yaml`)
 
 Key settings — see the full file in this repo for the complete config.

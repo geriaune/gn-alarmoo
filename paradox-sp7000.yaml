@@ -43,6 +43,8 @@ tailscale:
   auth_key: !secret tailscale_auth_key  # set this in ESPHome App SECRETS, generate it in tailscale/headscale server
   hostname: "paradox"
 #  uncomment below config line for headscale self-hosted server, not required for tailscale setup
+#  login_server: "https://vpn.yourhost.com"
+#  or
 #  login_server: "http://vpn.yourhost.com:8080"
 
 logger:
