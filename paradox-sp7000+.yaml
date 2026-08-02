@@ -42,7 +42,6 @@ external_components:
 tailscale:
   auth_key: !secret tailscale_auth_key  # set this in ESPHome App SECRETS, generate it in tailscale/headscale server
   hostname: "paradox"
-  disable_telemetry: true
 #  uncomment below config line for headscale self-hosted server, not required for tailscale setup
 #  login_server: "http://vpn.yourhost.com:8080"
 

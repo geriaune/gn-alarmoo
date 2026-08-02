@@ -8,7 +8,6 @@ from esphome.const import (
 from esphome.components.esp32 import (
     add_idf_component,
     add_idf_sdkconfig_option,
-    include_builtin_idf_component,
 )
 from esphome.components import binary_sensor, text_sensor, sensor
 
@@ -36,7 +35,6 @@ CONF_AUTH_KEY = "auth_key"
 CONF_HOSTNAME = "hostname"
 CONF_MAX_PEERS = "max_peers"
 CONF_LOGIN_SERVER = "login_server"
-CONF_DISABLE_TELEMETRY = "disable_telemetry"
 tailscale_ns = cg.esphome_ns.namespace("tailscale")
 TailscaleComponent = tailscale_ns.class_("TailscaleComponent", cg.Component)
 
@@ -47,7 +45,6 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_HOSTNAME, default=""): cv.string,
         cv.Optional(CONF_MAX_PEERS, default=16): cv.int_range(min=1, max=64),
         cv.Optional(CONF_LOGIN_SERVER, default=""): cv.string,
-        cv.Optional(CONF_DISABLE_TELEMETRY, default=False): cv.boolean,
     }
 )
 
@@ -62,12 +59,6 @@ async def to_code(config):
 
     if config[CONF_LOGIN_SERVER]:
         cg.add(var.set_login_server(config[CONF_LOGIN_SERVER]))
-
-    cg.add(var.set_telemetry_disabled(config[CONF_DISABLE_TELEMETRY]))
-    # Telemetry POSTs over HTTPS via ESP-IDF's esp_http_client, which ESPHome
-    # excludes by default to save compile time — re-enable it. (TLS uses the
-    # mbedtls certificate bundle already enabled below.)
-    include_builtin_idf_component("esp_http_client")
 
     # microlink sizes the static `ml_peer_t peers[ML_MAX_PEERS]` array at compile
     # time from CONFIG_ML_MAX_PEERS (default 16), and microlink_init() clamps the
