@@ -48,8 +48,9 @@ tailscale:
 #  login_server: "http://vpn.yourhost.com:8080"
 
 logger:
+  level: INFO   # change to DEBUG for more informative logs, but will spam the log with tailscale debug messages
   hardware_uart: UART0
-  baud_rate: 115200
+  baud_rate: 115200   # do not change this for PC log output to work
 
 # Enable Home Assistant API
 api:

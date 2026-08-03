@@ -13,6 +13,23 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
+## [2.0.1] — 2026-08-03
+
+### Changed
+- **`login_server` now accepts `https://` URLs as well as `http://`** for
+  self-hosted Headscale — previously only `http://` worked. Both forms are
+  now shown (commented) in `paradox-*.yaml`.
+- **Logger level defaults to `INFO`** (per upstream's own recommendation) to
+  suppress the noisy Tailscale/microlink `DEBUG` messages on the serial
+  console by default; set `level: DEBUG` back if you need the verbose
+  output.
+
+### Documentation
+- **Logger `baud_rate: 115200` must not be changed** — documented in the
+  YAML comment and the README: it's required for log output to reach a PC
+  over the module's USB cable, and is independent of the panel's own UART
+  speed (set separately under `uart:`, see the per-panel baud rate table).
+
 ## [2.0.0] — 2026-08-03
 
 Fork-specific release. Builds on top of vendored upstream `esphome-tailscale`
@@ -949,7 +966,8 @@ verified. Treat them as the honest answer to "can I rely on this for X?"
 ---
 
 <!-- Link references for the Keep a Changelog tooling -->
-[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.0...dev
+[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.1...dev
+[2.0.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/geriaune/gn-alarmoo/compare/v1.1.1...v2.0.0
 
 <!-- The [0.x] links below are upstream Csontikka/esphome-tailscale references. -->

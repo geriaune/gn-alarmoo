@@ -97,7 +97,7 @@ Last test performed with:
 This repo vendors and patches the upstream `esphome-tailscale` and
 `esphome-stream-server` components rather than pulling them live from
 upstream, so an upstream change can't unexpectedly break your build. Notable
-differences from upstream as of **v2.0.0**:
+differences from upstream as of **v2.0.1**:
 
 - **Builds on current ESPHome.** Upstream `oxan/esphome-stream-server` calls
   `esphome::network::get_use_address()`, which was renamed/removed in ESPHome
@@ -117,6 +117,11 @@ differences from upstream as of **v2.0.0**:
 - Per-panel configs (`paradox-sp6000.yaml`, `paradox-sp7000.yaml`,
   `paradox-sp7000+.yaml`) confirmed against real hardware, with the tested
   software/hardware stack documented above.
+- **`login_server` now also accepts `https://` URLs** for self-hosted
+  Headscale — previously only `http://` worked.
+- **Logger defaults to `level: INFO`** (per upstream's own recommendation) to
+  suppress noisy Tailscale/microlink debug messages on the serial console;
+  switch to `DEBUG` if you need the verbose output.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full history — upstream's changelog
 entries are kept for reference, with this fork's own changes called out
@@ -137,8 +142,9 @@ Key settings — see the full file in this repo for the complete config.
 ...
 # Route logging directly to UART0 port (away from default GPIO19/20)
 logger:
+  level: INFO   # change to DEBUG for more informative logs, but will spam the log with tailscale debug messages
   hardware_uart: UART0
-  baud_rate: 115200
+  baud_rate: 115200   # do not change this — required for PC log output over the USB cable to work
   
 # Tailscale VPN package
 packages:
@@ -151,7 +157,10 @@ packages:
 tailscale:
   auth_key: !secret tailscale_auth_key
   hostname: "paradox"
-  # login_server: "http://vpn.yourhost.com:8080"  # headscale only
+  # uncomment for a self-hosted Headscale server; both http and https (TLS) URLs are supported
+  # login_server: "https://vpn.yourhost.com"
+  # or
+  # login_server: "http://vpn.yourhost.com:8080"
 
 external_components:
   - source: github://oxan/esphome-stream-server
@@ -161,6 +170,8 @@ stream_server:
   port: 10000
 ...
 ```
+
+> ⚠️ **Important:** `logger: baud_rate` must stay at `115200` — the module's USB cable only outputs logs to your PC at that rate. Changing it does not affect the panel's own serial speed, which is set separately under `uart:` (see the table below).
 
 > ⚠️ **Important:** Different panels may have different serial connection speed. Below are ones confirmed working:
 
