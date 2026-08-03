@@ -13,6 +13,26 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
+## [2.0.2] — 2026-08-03
+
+Promotes the `dev` branch to `main` as the official v2 release. Functionally
+identical to `2.0.1`; the only change is repointing the package/component
+refs from `dev` to `main` now that `main` carries this content.
+
+### Changed
+- **`paradox-sp6000.yaml`, `paradox-sp7000.yaml`, `paradox-sp7000+.yaml`
+  now pull `packages:`/`external_components:` from `ref: main`** instead of
+  `ref: dev`, matching this repo's release branch.
+
+### Documentation
+- **README now documents v1 vs v2 ESPHome compatibility.** v1 (`v1.x` tags)
+  targets older ESPHome releases; v2 is tested against current ESPHome after
+  a recent ESPHome release changed the `esphome::network` API and broke the
+  `stream_server` component (fixed in `2.0.0`, see below). Added a "Working
+  stack for v2" list (Headscale v0.29.3, Tailscale 2026-08-03, ESPHome
+  Device Builder 2026.7.3) alongside the existing v1 stack, which is now
+  labeled "Working stack for v1".
+
 ## [2.0.1] — 2026-08-03
 
 ### Changed
@@ -966,7 +986,8 @@ verified. Treat them as the honest answer to "can I rely on this for X?"
 ---
 
 <!-- Link references for the Keep a Changelog tooling -->
-[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.1...dev
+[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.2...main
+[2.0.2]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/geriaune/gn-alarmoo/compare/v1.1.1...v2.0.0
 
