@@ -5,22 +5,23 @@ on:
     branches: [main]
     paths:
       - 'components/**'
-      - 'packages/**'
+      - 'vendor/**'
       - 'microlink/**'
-      - 'example.yaml'
-      - 'example-dev.yaml'
+      - 'paradox-*.yaml'
   pull_request:
     branches: [main]
     paths:
       - 'components/**'
-      - 'packages/**'
+      - 'vendor/**'
       - 'microlink/**'
-      - 'example.yaml'
-      - 'example-dev.yaml'
+      - 'paradox-*.yaml'
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config: [paradox-sp6000.yaml, paradox-sp7000.yaml, 'paradox-sp7000+.yaml']
     steps:
       - uses: actions/checkout@v7
 
@@ -40,8 +41,8 @@ jobs:
           wifi_password: "DummyPassword"
           EOF
 
-      - name: Validate example.yaml
-        run: esphome config example.yaml
+      - name: Validate ${{ matrix.config }}
+        run: esphome config "${{ matrix.config }}"
 
       - name: Validate package YAML
         run: |
@@ -57,7 +58,7 @@ jobs:
             tailscale:
               url: https://github.com/${{ github.repository }}
               ref: ${{ github.sha }}
-              files: [packages/tailscale/tailscale.yaml]
+              files: [vendor/esphome-tailscale/packages/tailscale/tailscale.yaml]
           tailscale:
             auth_key: "tskey-auth-dummy-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
           wifi:
@@ -75,6 +76,9 @@ jobs:
     # issues are caught in `validate` above — this job is the net that
     # catches C++ breakage, missing includes, or a microlink API drift
     # before it lands on main and reaches users via packages: ref: main.
+    strategy:
+      matrix:
+        config: [paradox-sp6000.yaml, paradox-sp7000.yaml, 'paradox-sp7000+.yaml']
     steps:
       - uses: actions/checkout@v7
 
@@ -92,9 +96,9 @@ jobs:
           path: |
             ~/.platformio
             .esphome
-          key: esphome-compile-${{ runner.os }}-${{ hashFiles('components/tailscale/__init__.py', 'microlink/components/microlink/CMakeLists.txt') }}
+          key: esphome-compile-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('components/tailscale/__init__.py', 'microlink/components/microlink/CMakeLists.txt') }}
           restore-keys: |
-            esphome-compile-${{ runner.os }}-
+            esphome-compile-${{ runner.os }}-${{ matrix.config }}-
 
       - name: Create dummy secrets
         run: |
@@ -104,5 +108,5 @@ jobs:
           wifi_password: "DummyPassword"
           EOF
 
-      - name: Compile example.yaml
-        run: esphome compile example.yaml
+      - name: Compile ${{ matrix.config }}
+        run: esphome compile "${{ matrix.config }}"
