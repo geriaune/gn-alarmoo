@@ -30,6 +30,11 @@ CI just never got far enough to report it before `2.1.0`.
 - **CI dummy secrets include a throwaway `api_encryption_key`** so the
   `validate` and `compile` jobs can resolve it. All six configs verified with
   `esphome config` on ESPHome 2026.7.4.
+- **The workflow retriggers on changes to itself.** `.github/workflows/validate.yml`
+  was missing from its own `paths:` filter, so CI fixes landed on `main`
+  without ever running. Added, along with `workflow_dispatch:` for manual
+  runs and `fail-fast: false` on the cheap `validate` matrix so one bad config
+  no longer cancels the other five.
 - **The "Validate package YAML" CI step now declares `external_components`**
   (and `psram:`) for the `tailscale` component. The vendored package only
   declares `tailscale` platforms — the component itself has to be pulled in by

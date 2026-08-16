@@ -8,6 +8,9 @@ on:
       - 'vendor/**'
       - 'microlink/**'
       - 'paradox-*.yaml'
+      # changes to this workflow must retrigger it, otherwise a CI fix sits
+      # unverified until some other path happens to change
+      - '.github/workflows/validate.yml'
   pull_request:
     branches: [main]
     paths:
@@ -15,11 +18,17 @@ on:
       - 'vendor/**'
       - 'microlink/**'
       - 'paradox-*.yaml'
+      # changes to this workflow must retrigger it, otherwise a CI fix sits
+      # unverified until some other path happens to change
+      - '.github/workflows/validate.yml'
+  workflow_dispatch:
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     strategy:
+      # schema checks are cheap — report every config, don't stop at the first
+      fail-fast: false
       matrix:
         config: [paradox-sp6000.yaml, paradox-sp7000.yaml, 'paradox-sp7000+.yaml',
                  paradox-sp6000-v1.yaml, paradox-sp7000-v1.yaml, 'paradox-sp7000+-v1.yaml']
