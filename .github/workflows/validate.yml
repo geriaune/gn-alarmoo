@@ -57,11 +57,22 @@ jobs:
             board: esp32-s3-devkitc-1
             framework:
               type: esp-idf
+          psram:
+            mode: octal
+            speed: 80MHz
           packages:
             tailscale:
               url: https://github.com/${{ github.repository }}
               ref: ${{ github.sha }}
               files: [vendor/esphome-tailscale/packages/tailscale/tailscale.yaml]
+          # The package only declares tailscale platforms — the component itself
+          # has to come from external_components, same as the paradox-*.yaml do.
+          external_components:
+            - source:
+                type: git
+                url: https://github.com/${{ github.repository }}
+                ref: ${{ github.sha }}
+              components: [tailscale]
           tailscale:
             auth_key: "tskey-auth-dummy-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
           wifi:

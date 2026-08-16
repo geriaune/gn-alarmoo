@@ -30,6 +30,12 @@ CI just never got far enough to report it before `2.1.0`.
 - **CI dummy secrets include a throwaway `api_encryption_key`** so the
   `validate` and `compile` jobs can resolve it. All six configs verified with
   `esphome config` on ESPHome 2026.7.4.
+- **The "Validate package YAML" CI step now declares `external_components`**
+  (and `psram:`) for the `tailscale` component. The vendored package only
+  declares `tailscale` platforms — the component itself has to be pulled in by
+  the user config — so the step had always failed with *"Platform not found:
+  'binary_sensor.tailscale'"*. Unrelated to the configs themselves; it was
+  simply never reached before.
 
 ## [2.1.0] — 2026-08-16
 
