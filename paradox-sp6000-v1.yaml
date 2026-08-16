@@ -11,7 +11,8 @@ esphome:
 # supply rather than to the ESP.
 
 esp32:
-  board: esp32-s3-devkitc-1   # ESP32-S3 module; for an ESP32-C3 module set the matching board, e.g. esp32-c3-devkitm-1
+  board: esp32-s3-devkitc-1     # ESP32-S3 module
+# board: esp32-c3-devkitm-1     # ESP32-C3 module — swap the uart pins below to match
   framework:
     type: esp-idf
 
@@ -60,8 +61,10 @@ time:
 
 uart:
   - id: paradox_uart
-    tx_pin: 19    # S3 pinout of the geriaune.pro built module — change for a different board (an ESP32-C3 has a different pinout) or different wiring
-    rx_pin: 20    # S3 pinout of the geriaune.pro built module — change for a different board (an ESP32-C3 has a different pinout) or different wiring
+    tx_pin: 19    # ESP32-S3 pinout of the geriaune.pro built module — change if your wiring differs
+    rx_pin: 20    # ESP32-S3 pinout of the geriaune.pro built module — change if your wiring differs
+#    tx_pin: 6    # ESP32-C3 pinout (confirmed working) — use these two instead on a C3 board
+#    rx_pin: 7
     baud_rate: 9600
 
 stream_server:

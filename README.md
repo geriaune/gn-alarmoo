@@ -13,9 +13,18 @@ Two hardware modules are supported, each with its own set of ESPHome configs:
 
 The v1 firmware is small enough to run on an **ESP32-C3 or an ESP32-S3** — it
 has no VPN stack, so it needs no PSRAM. **VPN support (v2) requires an
-ESP32-S3** with ≥ 8MB flash and ≥ 8MB PSRAM; a C3 cannot run it. The v1 configs
-ship with the S3 board and the S3 pinout of the geriaune.pro module — on a C3,
-set `esp32: board:` and the `uart:` `tx_pin`/`rx_pin` to match your board.
+ESP32-S3** with ≥ 8MB flash and ≥ 8MB PSRAM; a C3 cannot run it.
+
+The v1 configs ship with the S3 settings active and the C3 alternatives right
+below them as comments — on a C3, comment out the S3 lines and uncomment the
+C3 ones:
+
+| Board | `esp32: board:` | UART TX | UART RX |
+|---|---|---|---|
+| ESP32-S3 | `esp32-s3-devkitc-1` | `19` | `20` |
+| ESP32-C3 | `esp32-c3-devkitm-1` | `6` | `7` |
+
+Both pinouts are confirmed working against a panel.
 
 Pick the file matching **both** your module and your panel, e.g. a v1 module on
 an SP7000 uses [paradox-sp7000-v1.yaml](paradox-sp7000-v1.yaml), a v2 module on

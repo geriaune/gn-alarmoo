@@ -28,9 +28,10 @@ status LED, and documents that v1 also runs on an ESP32-C3.
 
 ### Documentation
 - **v1 runs on an ESP32-C3 or ESP32-S3; VPN (v2) requires an S3** with ≥ 8MB
-  flash and ≥ 8MB PSRAM. The v1 configs ship with the S3 board and the S3
-  pinout of the geriaune.pro module — on a C3, `esp32: board:` and the `uart:`
-  `tx_pin`/`rx_pin` have to be set for that board.
+  flash and ≥ 8MB PSRAM. The v1 configs ship with the S3 settings active
+  (`board: esp32-s3-devkitc-1`, `tx_pin: 19` / `rx_pin: 20`) and the confirmed
+  C3 alternatives (`board: esp32-c3-devkitm-1`, `tx_pin: 6` / `rx_pin: 7`)
+  directly below as comments; README carries the same table.
 - **v1 status LED table replaced** with the single "powered" state, noting
   there is no visual connection status — use HA or the ESPHome logs. The
   "Light Integration to HA" section is marked v2-only.
