@@ -13,7 +13,7 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
-## [2.1.2] — 2026-08-16
+## [2.1.2] — 2026-08-17
 
 Corrects the v1 configs to match the actual v1 hardware, which has no RGB
 status LED, and documents that v1 also runs on an ESP32-C3.
