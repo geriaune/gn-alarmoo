@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        config: [paradox-sp6000.yaml, paradox-sp7000.yaml, 'paradox-sp7000+.yaml']
+        config: [paradox-sp6000.yaml, paradox-sp7000.yaml, 'paradox-sp7000+.yaml',
+                 paradox-sp6000-v1.yaml, paradox-sp7000-v1.yaml, 'paradox-sp7000+-v1.yaml']
     steps:
       - uses: actions/checkout@v7
 
@@ -78,7 +79,8 @@ jobs:
     # before it lands on main and reaches users via packages: ref: main.
     strategy:
       matrix:
-        config: [paradox-sp6000.yaml, paradox-sp7000.yaml, 'paradox-sp7000+.yaml']
+        config: [paradox-sp6000.yaml, paradox-sp7000.yaml, 'paradox-sp7000+.yaml',
+                 paradox-sp6000-v1.yaml, paradox-sp7000-v1.yaml, 'paradox-sp7000+-v1.yaml']
     steps:
       - uses: actions/checkout@v7
 

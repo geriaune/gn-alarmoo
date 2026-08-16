@@ -2,20 +2,45 @@
 
 Connect a Paradox alarm panel to Home Assistant over Wi-Fi with optional VPN
 
+## Hardware module v1 vs v2
+
+Two hardware modules are supported, each with its own set of ESPHome configs:
+
+| Module | Connectivity | ESPHome config | Notes |
+|---|---|---|---|
+| **v1** | Wi-Fi only | `paradox-*-v1.yaml` | No Tailscale/VPN. Use when HA is on the same LAN. |
+| **v2** | Wi-Fi + Tailscale/Headscale VPN | `paradox-*.yaml` | Needs ≥ 8MB flash and ≥ 8MB PSRAM for the VPN stack. |
+
+Pick the file matching **both** your module and your panel, e.g. a v1 module on
+an SP7000 uses [paradox-sp7000-v1.yaml](paradox-sp7000-v1.yaml), a v2 module on
+the same panel uses [paradox-sp7000.yaml](paradox-sp7000.yaml).
+
+Everything below describing Tailscale, Headscale, `login_server`, exit nodes or
+`use_address: "100.x.y.z"` applies to the **v2** module only. On a v1 module
+you point PAI and the ESPHome integration at the module's LAN IP instead.
+
+> ⚠️ Don't confuse the hardware module version with the release tags: `v1.x` /
+> `v2.x` tags are firmware/ESPHome-compatibility versions (see
+> [Software Stack](#software-stack)) and are independent of which hardware
+> module you own.
+
+---
+
 > ⚠️ **Important:** Only one module can use the serial interface at a time. Remove any existing IP150 or GSM modules before connecting this one. Make sure your panel is not locked or running firmware with encrypted serial comms (maybe they have fixed this already? Don't update your panel's firmware if this works!).
 > 
 > 🔒 **Network Security:** The serial stream is exposed over the network **without authentication**.
 > Anyone with access to port `10000` on the ESP can talk directly to your alarm panel.
 > Keep the ESP on an isolated IoT Wi-Fi network or a dedicated VLAN with no external access.
-> The Tailscale/VPN layer encrypts transit to HA, but does **not** protect the ESP itself from
-> other devices on the same local network segment.
+> The Tailscale/VPN layer (v2 module) encrypts transit to HA, but does **not** protect the ESP itself from
+> other devices on the same local network segment. The v1 module has no VPN layer at all, so keeping it
+> on an isolated network is the only protection — never expose port `10000` beyond your LAN.
 
 ---
 
 ## How It Works
 
 ```
-Paradox Panel  ──serial──►  ESP32-S3  ──Wi-Fi──►  [Tailscale VPN]  ──►  Home Assistant
+Paradox Panel  ──serial──►  ESP32-S3  ──Wi-Fi──►  [Tailscale VPN — v2 only]  ──►  Home Assistant
                                                                               │
                                                                          PAI App + MQTT
 ```
@@ -24,14 +49,14 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 
 > ⚠️ **Important:** When using the Plug-and-Play cable, serial communication over USB must be redirected to `UART0` — making GPIO19/20 available for panel communication (port marked as "USB")
 > 
-> "Exit Node" MUST be enabled for the Home Assistant Tailscale App (default) when your ESP is behind heavily restricted NAT or cellular internet! Traffic must be routed through HA in these situations; otherwise, the module will not be reachable from other Headscale nodes. This is also the preferred configuration in general.
+> (v2 module) "Exit Node" MUST be enabled for the Home Assistant Tailscale App (default) when your ESP is behind heavily restricted NAT or cellular internet! Traffic must be routed through HA in these situations; otherwise, the module will not be reachable from other Headscale nodes. This is also the preferred configuration in general.
 ---
 
 ## Hardware
 
 | Part | Notes |
 |---|---|
-| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash and 8MB PSRAM is required for VPN support |
+| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash and 8MB PSRAM is required for VPN support (v2 module); the Wi-Fi-only v1 module has no PSRAM requirement |
 | External Wi-Fi antenna | Optional, helps in poor signal spots |
 | 4-pin Molex KK / Dupont connector | Connects to panel serial port |
 | DC buck step-down (12V → 5V) | Powers ESP from panel's 12VDC rail |
@@ -57,7 +82,9 @@ Serial on Panel         BUCK              ESP32
 
 ## Status LED Indicator
 
-The RGB LED provides visual feedback about the device's connection status:
+The RGB LED provides visual feedback about the device's connection status.
+
+**v2 module (`paradox-*.yaml`):**
 
 | State | LED Color | Pattern | Meaning |
 |-------|-----------|---------|---------|
@@ -65,6 +92,14 @@ The RGB LED provides visual feedback about the device's connection status:
 | No WiFi | 🟡 Yellow | Blinking | Device is trying to connect to WiFi network |
 | WiFi Only | 🔵 Blue | Solid | Connected to WiFi, VPN is not active |
 | VPN Connected | 🟢 Green | Solid | Connected to WiFi and Tailscale VPN |
+
+**v1 module (`paradox-*-v1.yaml`)** — no VPN state, so green means fully connected:
+
+| State | LED Color | Pattern | Meaning |
+|-------|-----------|---------|---------|
+| Booting | 🔴 Red | Blinking | Device initializing, WiFi not yet available |
+| No WiFi | 🟡 Yellow | Blinking | Device is trying to connect to WiFi network |
+| WiFi Connected | 🟢 Green | Solid | Connected to WiFi |
 
 ## Light Integration to HA
 
@@ -79,30 +114,32 @@ Install these as **Home Assistant Apps/Add-ons**:
 1. **ESPHome** — flashes and manages ESP32 firmware
 2. **Mosquitto broker** — MQTT broker
 3. **[Paradox Alarm Interface (PAI)](https://github.com/ParadoxAlarmInterface/pai)** — decodes panel data → MQTT
-4. **Tailscale or Headscale** — VPN (optional but recommended if HA is remote)
+4. **Tailscale or Headscale** — VPN (**v2 module only**; optional but recommended if HA is remote)
 
-For VPN you also need a free [Tailscale](https://tailscale.com) account, or a self-hosted [Headscale](https://headscale.net) server.
+For VPN you also need a free [Tailscale](https://tailscale.com) account, or a self-hosted [Headscale](https://headscale.net) server. The v1 module is Wi-Fi only — skip items 4 and anything VPN-related below.
 
-> ⚠️ **v1 vs v2:** v1 (`v1.x` tags) targets older ESPHome releases. v2
+> ⚠️ **Release tags v1.x vs v2.x** (not the same thing as the hardware module
+> version above): v1 (`v1.x` tags) targets older ESPHome releases. v2
 > (`v2.x` tags, this branch) is tested against current ESPHome — notably,
 > ESPHome's `esphome::network` API changed in a recent release and broke
 > the `stream_server` component upstream depends on, which had to be
 > patched to build again (see *About This Fork* below). If you're on an
 > older ESPHome install and don't want to upgrade it, stay on a `v1.x` tag.
 
-Working stack for v1:
+Working stack for release tags `v1.x`:
 - Headscale version v0.28.0
 - Tailscale (2026-06-16)
 - ESPHome Device Builder version: 2026.5.3
 - WiFi and cellular networks
 - gn-alarmoo v2 hardware module
 
-Working stack for v2:
+Working stack for release tags `v2.x`:
 - Headscale version v0.29.3
 - Tailscale (2026-08-03)
 - ESPHome Device Builder version: 2026.7.3
 - WiFi and cellular networks
-- gn-alarmoo v2 hardware module
+- gn-alarmoo v2 hardware module (`paradox-*.yaml`)
+- gn-alarmoo v1 hardware module (`paradox-*-v1.yaml`, Wi-Fi only — no Headscale/Tailscale involved)
 
 ---
 
@@ -130,7 +167,9 @@ differences from upstream as of **v2.0.2**:
   same protocol version.
 - Per-panel configs (`paradox-sp6000.yaml`, `paradox-sp7000.yaml`,
   `paradox-sp7000+.yaml`) confirmed against real hardware, with the tested
-  software/hardware stack documented above.
+  software/hardware stack documented above. The matching `-v1.yaml` files are
+  the same configs with the VPN layer stripped out for the Wi-Fi-only v1
+  hardware module.
 - **`login_server` now also accepts `https://` URLs** for self-hosted
   Headscale — previously only `http://` worked.
 - **Logger defaults to `level: INFO`** (per upstream's own recommendation) to
@@ -143,9 +182,13 @@ separately at the top.
 
 ---
 
-## ESPHome Config (`paradox-*.yaml`)
+## ESPHome Config (`paradox-*.yaml` / `paradox-*-v1.yaml`)
 
 Key settings — see the full file in this repo for the complete config.
+
+> The `packages: tailscale:` and `tailscale:` blocks shown below exist **only in
+> the v2 configs**. The `paradox-*-v1.yaml` files pull in `stream_server` alone
+> and have no VPN configuration at all.
 
 ⚠️ **Important:** :
 > The following pasted Tailscale package and stream server `external_components` code is for the original repositories.
@@ -199,10 +242,12 @@ stream_server:
 ```yaml
 wifi_ssid: "YourSSID"
 wifi_password: "YourPassword"
-tailscale_auth_key: "tskey-auth-****"   # generate one by adding a linux device in the Tailscale/Headscale
+tailscale_auth_key: "tskey-auth-****"   # v2 module only — generate one by adding a linux device in the Tailscale/Headscale
 ```
 
-After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboard, then uncomment and set `use_address` in your ESPHome `paradox.yaml` file.
+After flashing a **v2** module, find the Tailscale IP in the ESP logs or your Tailscale dashboard, then uncomment and set `use_address` in your ESPHome `paradox.yaml` file.
+
+On a **v1** module there is no Tailscale IP — if mDNS discovery is unreliable on your network, set `use_address` to the module's LAN IP (ideally a DHCP reservation) instead.
 
 ---
 
@@ -211,7 +256,7 @@ After flashing, find the Tailscale IP in the ESP logs or your Tailscale dashboar
 | Setting | Value |
 |---|---|
 | `CONNECTION_TYPE` | `IP` |
-| `IP_CONNECTION_HOST` | Your Tailscale IP of ESP (`100.x.y.z`) |
+| `IP_CONNECTION_HOST` | v2: your Tailscale IP of ESP (`100.x.y.z`) — v1: the module's LAN IP (`192.168.x.y`) |
 | `IP_CONNECTION_PASSWORD` | Panel password (default: `paradox`) |
 | `IP_CONNECTION_BARE` | ✅ Enable (⚠️ required!) — this hides under "Show unused optional configuration options" |
 | `MQTT_ENABLE` | ✅ Enable |
@@ -236,10 +281,11 @@ INFO - Connection OK
 
 Go to **HA Settings → Apps → ESPHome** and enable **"Use ping for status"**.
 mDNS doesn't work across subnets (VPN), so ICMP ping is needed to show nodes as online.
+On a v1 module with HA on the same subnet, mDNS works and this is not needed.
 
 ---
 
-## VPN IP Note
+## VPN IP Note (v2 module)
 
 Every re-flash from PC or re-authentication assigns a new Tailscale IP. When that happens, update the IP in:
 - ESPHome device config (`use_address`)
