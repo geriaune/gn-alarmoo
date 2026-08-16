@@ -13,6 +13,40 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-08-16
+
+Adds first-class support for the **v1 hardware module** (Wi-Fi only, no VPN)
+next to the existing v2 module configs. Nothing changes for v2 users — the
+`paradox-*.yaml` files and the firmware itself are untouched.
+
+### Added
+- **`paradox-sp6000-v1.yaml`, `paradox-sp7000-v1.yaml`,
+  `paradox-sp7000+-v1.yaml`** — copies of the matching v2 configs with the
+  whole VPN layer removed: no `packages: tailscale:`, no `tailscale:` block,
+  `external_components:` pulls `stream_server` only, and the
+  `tailscale_state_mirror` template sensor is gone. The status-light script
+  drops to two states (🟢 green = Wi-Fi connected, 🟡 yellow blinking = no
+  Wi-Fi) since there is no VPN state to report.
+- `psram:` is present but **commented out** in the v1 configs — it was only
+  required for the VPN stack, and enabling it on a board without PSRAM fails
+  at boot. Uncomment it if your v1 module has PSRAM.
+
+### Changed
+- **CI validates and compiles all six configs.** `validate.yml`'s `validate`
+  and `compile` matrices now cover the three `-v1.yaml` files as well.
+
+### Documentation
+- **README documents the hardware module split.** New "Hardware module v1 vs
+  v2" section up top (which config goes with which module), a separate LED
+  state table for v1, and v2-only markers on the Tailscale, exit-node, VPN-IP
+  and PAI host settings. The network-security warning now notes that the v1
+  module has no VPN layer at all, so network isolation is the only protection.
+- **Tested stack now lists the v1 module** alongside the v2 module under the
+  `v2.x` stack.
+- **The old "Working stack for v1/v2" headings are relabeled "release tags
+  `v1.x`/`v2.x`"** to keep them distinct from the hardware module versions,
+  which are unrelated.
+
 ## [2.0.2] — 2026-08-03
 
 Promotes the `dev` branch to `main` as the official v2 release. Functionally
@@ -986,7 +1020,8 @@ verified. Treat them as the honest answer to "can I rely on this for X?"
 ---
 
 <!-- Link references for the Keep a Changelog tooling -->
-[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.2...main
+[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.0...main
+[2.1.0]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/geriaune/gn-alarmoo/compare/v1.1.1...v2.0.0
