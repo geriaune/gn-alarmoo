@@ -40,6 +40,8 @@ jobs:
           tailscale_auth_key: "tskey-auth-dummy-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
           wifi_ssid: "DummySSID"
           wifi_password: "DummyPassword"
+          # CI-only throwaway key; must be valid base64 of 32 bytes or the api: schema rejects it
+          api_encryption_key: "YlZzoA+vKh9XiLmr+8rDq9tP0u0+HEwG4Ko0Pncy62A="
           EOF
 
       - name: Validate ${{ matrix.config }}
@@ -108,6 +110,8 @@ jobs:
           tailscale_auth_key: "tskey-auth-dummy-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
           wifi_ssid: "DummySSID"
           wifi_password: "DummyPassword"
+          # CI-only throwaway key; must be valid base64 of 32 bytes or the api: schema rejects it
+          api_encryption_key: "YlZzoA+vKh9XiLmr+8rDq9tP0u0+HEwG4Ko0Pncy62A="
           EOF
 
       - name: Compile ${{ matrix.config }}

@@ -13,6 +13,24 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
+## [2.1.1] — 2026-08-16
+
+Fixes the ESPHome config validation that failed on every `paradox-*.yaml`,
+including the new v1 files — the shipped `api:` placeholder key was not valid
+base64, so `esphome config` rejected it. This affected the v2 configs too;
+CI just never got far enough to report it before `2.1.0`.
+
+### Fixed
+- **`api: encryption: key:` now reads `!secret api_encryption_key`** in all six
+  configs, instead of the `"xxxxxxxxxxxxxxxxxxxxx"` placeholder that ESPHome
+  rejected with *"Invalid key format, please check it's using base64."* Using a
+  secret also means no usable API key is published in this repo — add
+  `api_encryption_key` to your ESPHome secrets with the key ESPHome generates
+  for the device.
+- **CI dummy secrets include a throwaway `api_encryption_key`** so the
+  `validate` and `compile` jobs can resolve it. All six configs verified with
+  `esphome config` on ESPHome 2026.7.4.
+
 ## [2.1.0] — 2026-08-16
 
 Adds first-class support for the **v1 hardware module** (Wi-Fi only, no VPN)
@@ -1020,7 +1038,8 @@ verified. Treat them as the honest answer to "can I rely on this for X?"
 ---
 
 <!-- Link references for the Keep a Changelog tooling -->
-[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.0...main
+[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.1...main
+[2.1.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.0...v2.0.1

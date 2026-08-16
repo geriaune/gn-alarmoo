@@ -242,8 +242,13 @@ stream_server:
 ```yaml
 wifi_ssid: "YourSSID"
 wifi_password: "YourPassword"
+api_encryption_key: "base64-key-from-ESPHome"   # 32-byte base64 key ESPHome generates when you add the device
 tailscale_auth_key: "tskey-auth-****"   # v2 module only — generate one by adding a linux device in the Tailscale/Headscale
 ```
+
+The API encryption key is referenced as `!secret api_encryption_key` rather than
+being written into the YAML, so no usable key ships in this repo. Copy the key
+ESPHome generates for your device into your ESPHome secrets.
 
 After flashing a **v2** module, find the Tailscale IP in the ESP logs or your Tailscale dashboard, then uncomment and set `use_address` in your ESPHome `paradox.yaml` file.
 
