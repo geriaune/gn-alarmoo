@@ -5,28 +5,18 @@
 esphome:
   name: paradox
   friendly_name: paradox
-  on_boot:
-    priority: 600             # runs before wifi init
-    then:
-      - light.turn_on:
-          id: rgb_light
-          red: 100%
-          green: 0%
-          blue: 0%
-          brightness: 40%
-          effect: blink
+
+# The v1 module has no RGB status LED, so there is nothing to signal state
+# with — the red LED on the board is a plain power indicator, wired to the
+# supply rather than to the ESP.
 
 esp32:
-  board: esp32-s3-devkitc-1
+  board: esp32-s3-devkitc-1   # ESP32-S3 module; for an ESP32-C3 module set the matching board, e.g. esp32-c3-devkitm-1
   framework:
     type: esp-idf
 
-# The v1 module is Wi-Fi only and does not need PSRAM (that was a VPN
-# requirement). Uncomment this block only if your board actually has PSRAM —
-# enabling it on a board without PSRAM fails at boot.
-#psram:
-#  mode: octal
-#  speed: 80MHz
+# No PSRAM needed: it was only a requirement for the VPN stack, which the v1
+# module does not run. That is why the v1 firmware also fits an ESP32-C3.
 
 # Component implementations sourced from this repository and ref
 external_components:
@@ -56,10 +46,6 @@ wifi:
   ssid: !secret wifi_ssid           # change this to your wifi SSID or use fallback AP for wifi settings
   password: !secret wifi_password   # change this to your wifi password or use fallback AP for wifi settings
 #  use_address: "192.168.x.y"      # set this to the module's LAN IP if mDNS discovery doesn't work on your network
-  on_connect:
-    - script.execute: update_light_state
-  on_disconnect:
-    - script.execute: update_light_state
 
 #  # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -74,8 +60,8 @@ time:
 
 uart:
   - id: paradox_uart
-    tx_pin: 19    # change this if you are using anything other than geriaune.pro built module and using a different GPIO for TX
-    rx_pin: 20    # change this if you are using anything other than geriaune.pro built module and using a different GPIO for RX
+    tx_pin: 19    # S3 pinout of the geriaune.pro built module — change for a different board (an ESP32-C3 has a different pinout) or different wiring
+    rx_pin: 20    # S3 pinout of the geriaune.pro built module — change for a different board (an ESP32-C3 has a different pinout) or different wiring
     baud_rate: 9600
 
 stream_server:
@@ -86,58 +72,6 @@ binary_sensor:
   - platform: stream_server
     connected:
       name: "Paradox UART"
-
-# Script to handle the two-state logic
-script:
-  - id: update_light_state
-    mode: restart
-    then:
-      - if:
-          condition:
-            wifi.connected:
-          then:
-            # GREEN: WiFi connected
-            - light.turn_on:
-                id: rgb_light
-                red: 0%
-                green: 100%
-                blue: 0%
-                brightness: 40%
-                effect: none
-            - logger.log: "State: WiFi connected (Green)"
-          else:
-            # No WiFi connection - YELLOW
-            - light.turn_on:
-                id: rgb_light
-                red: 100%
-                green: 100%
-                blue: 0%
-                brightness: 40%
-                effect: blink
-            - logger.log: "State: No WiFi (Yellow)"
-
-# Periodic check as backup
-interval:
-  - interval: 30s
-    then:
-      - script.execute: update_light_state
-
-light:
-  - platform: esp32_rmt_led_strip
-    id: rgb_light
-    rgb_order: GRB
-    pin: GPIO48
-    num_leds: 1
-    chipset: ws2812
-    name: "Status Light"
-    restore_mode: ALWAYS_OFF
-    effects:
-      - pulse:
-          name: "blink"
-          transition_length: 100ms
-          update_interval: 500ms
-          min_brightness: 0%
-          max_brightness: 100%
 
 sensor:
   - platform: stream_server

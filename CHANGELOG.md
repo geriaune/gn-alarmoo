@@ -13,6 +13,28 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
+## [2.1.2] — 2026-08-16
+
+Corrects the v1 configs to match the actual v1 hardware, which has no RGB
+status LED, and documents that v1 also runs on an ESP32-C3.
+
+### Fixed
+- **The v1 configs no longer drive a status LED that does not exist.** The v1
+  module's red LED is a plain power indicator wired to the supply, not to the
+  ESP. Removed the `light:` (`esp32_rmt_led_strip` on `GPIO48`), the
+  `update_light_state` script, its `interval:` and `wifi:` triggers, and the
+  `on_boot:` light action from `paradox-*-v1.yaml`. `GPIO48` does not exist on
+  an ESP32-C3 either, so this also unblocks C3 use.
+
+### Documentation
+- **v1 runs on an ESP32-C3 or ESP32-S3; VPN (v2) requires an S3** with ≥ 8MB
+  flash and ≥ 8MB PSRAM. The v1 configs ship with the S3 board and the S3
+  pinout of the geriaune.pro module — on a C3, `esp32: board:` and the `uart:`
+  `tx_pin`/`rx_pin` have to be set for that board.
+- **v1 status LED table replaced** with the single "powered" state, noting
+  there is no visual connection status — use HA or the ESPHome logs. The
+  "Light Integration to HA" section is marked v2-only.
+
 ## [2.1.1] — 2026-08-16
 
 Fixes the ESPHome config validation that failed on every `paradox-*.yaml`,
@@ -1049,7 +1071,8 @@ verified. Treat them as the honest answer to "can I rely on this for X?"
 ---
 
 <!-- Link references for the Keep a Changelog tooling -->
-[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.1...main
+[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.2...main
+[2.1.2]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.1...v2.0.2

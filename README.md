@@ -6,10 +6,16 @@ Connect a Paradox alarm panel to Home Assistant over Wi-Fi with optional VPN
 
 Two hardware modules are supported, each with its own set of ESPHome configs:
 
-| Module | Connectivity | ESPHome config | Notes |
-|---|---|---|---|
-| **v1** | Wi-Fi only | `paradox-*-v1.yaml` | No Tailscale/VPN. Use when HA is on the same LAN. |
-| **v2** | Wi-Fi + Tailscale/Headscale VPN | `paradox-*.yaml` | Needs ≥ 8MB flash and ≥ 8MB PSRAM for the VPN stack. |
+| Module | Connectivity | ESPHome config | ESP | Status LED |
+|---|---|---|---|---|
+| **v1** | Wi-Fi only | `paradox-*-v1.yaml` | ESP32-C3 or ESP32-S3 | none (red power LED only) |
+| **v2** | Wi-Fi + Tailscale/Headscale VPN | `paradox-*.yaml` | ESP32-S3 only | RGB status LED |
+
+The v1 firmware is small enough to run on an **ESP32-C3 or an ESP32-S3** — it
+has no VPN stack, so it needs no PSRAM. **VPN support (v2) requires an
+ESP32-S3** with ≥ 8MB flash and ≥ 8MB PSRAM; a C3 cannot run it. The v1 configs
+ship with the S3 board and the S3 pinout of the geriaune.pro module — on a C3,
+set `esp32: board:` and the `uart:` `tx_pin`/`rx_pin` to match your board.
 
 Pick the file matching **both** your module and your panel, e.g. a v1 module on
 an SP7000 uses [paradox-sp7000-v1.yaml](paradox-sp7000-v1.yaml), a v2 module on
@@ -40,7 +46,7 @@ you point PAI and the ESPHome integration at the module's LAN IP instead.
 ## How It Works
 
 ```
-Paradox Panel  ──serial──►  ESP32-S3  ──Wi-Fi──►  [Tailscale VPN — v2 only]  ──►  Home Assistant
+Paradox Panel  ──serial──►  ESP32-C3/S3  ──Wi-Fi──►  [Tailscale VPN — v2, S3 only]  ──►  Home Assistant
                                                                               │
                                                                          PAI App + MQTT
 ```
@@ -56,7 +62,7 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 
 | Part | Notes |
 |---|---|
-| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash and 8MB PSRAM is required for VPN support (v2 module); the Wi-Fi-only v1 module has no PSRAM requirement |
+| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash and 8MB PSRAM is required for VPN support (v2 module). The Wi-Fi-only v1 module needs no PSRAM and also runs on an ESP32-C3 |
 | External Wi-Fi antenna | Optional, helps in poor signal spots |
 | 4-pin Molex KK / Dupont connector | Connects to panel serial port |
 | DC buck step-down (12V → 5V) | Powers ESP from panel's 12VDC rail |
@@ -82,7 +88,7 @@ Serial on Panel         BUCK              ESP32
 
 ## Status LED Indicator
 
-The RGB LED provides visual feedback about the device's connection status.
+On the v2 module the RGB LED provides visual feedback about the device's connection status.
 
 **v2 module (`paradox-*.yaml`):**
 
@@ -93,17 +99,19 @@ The RGB LED provides visual feedback about the device's connection status.
 | WiFi Only | 🔵 Blue | Solid | Connected to WiFi, VPN is not active |
 | VPN Connected | 🟢 Green | Solid | Connected to WiFi and Tailscale VPN |
 
-**v1 module (`paradox-*-v1.yaml`)** — no VPN state, so green means fully connected:
+**v1 module (`paradox-*-v1.yaml`):**
 
 | State | LED Color | Pattern | Meaning |
 |-------|-----------|---------|---------|
-| Booting | 🔴 Red | Blinking | Device initializing, WiFi not yet available |
-| No WiFi | 🟡 Yellow | Blinking | Device is trying to connect to WiFi network |
-| WiFi Connected | 🟢 Green | Solid | Connected to WiFi |
+| Powered | 🔴 Red | Solid | Board has power |
+
+The v1 module has no RGB LED — the red LED is a plain power indicator and is
+not driven by the firmware, so there is no visual connection status. Check the
+device's state in Home Assistant or the ESPHome logs instead.
 
 ## Light Integration to HA
 
-This light can be integrated with Home Assistant; however, there is limited practical value, since the entity status will become “Unavailable” whenever the module loses Wi-Fi/VPN connectivity or stops reporting to Home Assistant.
+(v2 module only — the v1 module exposes no light entity.) This light can be integrated with Home Assistant; however, there is limited practical value, since the entity status will become “Unavailable” whenever the module loses Wi-Fi/VPN connectivity or stops reporting to Home Assistant.
 
 ---
 
