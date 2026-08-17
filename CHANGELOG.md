@@ -13,6 +13,12 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
+### Documentation
+- **XIAO ESP32-C3 pin labels noted** alongside the C3 UART pins: GPIO6 is
+  silkscreened `D4` and GPIO7 is `D5` on that board, while `tx_pin`/`rx_pin`
+  still take the GPIO number. Added to README and to the `uart:` comments in
+  `paradox-*-v1.yaml`.
+
 ## [2.1.2] — 2026-08-17
 
 Corrects the v1 configs to match the actual v1 hardware, which has no RGB

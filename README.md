@@ -22,9 +22,14 @@ C3 ones:
 | Board | `esp32: board:` | UART TX | UART RX |
 |---|---|---|---|
 | ESP32-S3 | `esp32-s3-devkitc-1` | `19` | `20` |
-| ESP32-C3 | `esp32-c3-devkitm-1` | `6` | `7` |
+| ESP32-C3 | `esp32c3` | `6` | `7` |
 
 Both pinouts are confirmed working against a panel.
+
+On a Seeed Studio XIAO ESP32-C3 the GPIO numbers are not what's printed on the
+board — GPIO6 is silkscreened **D4** and GPIO7 is **D5**. Wire against the D
+labels, but keep the GPIO numbers in the YAML: ESPHome's `tx_pin`/`rx_pin` take
+the GPIO number, not the D label.
 
 Pick the file matching **both** your module and your panel, e.g. a v1 module on
 an SP7000 uses [paradox-sp7000-v1.yaml](paradox-sp7000-v1.yaml), a v2 module on
