@@ -8,23 +8,24 @@ Two hardware modules are supported, each with its own set of ESPHome configs:
 
 | Module | Connectivity | ESPHome config | ESP | Status LED |
 |---|---|---|---|---|
-| **v1** | Wi-Fi only | `paradox-*-v1.yaml` | ESP32-C3 or ESP32-S3 | none (red power LED only) |
+| **v1** | Wi-Fi only | `paradox-*-v1.yaml` | ESP32-C3 (configs ship for C3; also runs on an S3) | none (red power LED only) |
 | **v2** | Wi-Fi + Tailscale/Headscale VPN | `paradox-*.yaml` | ESP32-S3 only | RGB status LED |
 
 The v1 firmware is small enough to run on an **ESP32-C3 or an ESP32-S3** — it
 has no VPN stack, so it needs no PSRAM. **VPN support (v2) requires an
 ESP32-S3** with ≥ 8MB flash and ≥ 8MB PSRAM; a C3 cannot run it.
 
-The v1 configs ship with the S3 settings active and the C3 alternatives right
-below them as comments — on a C3, comment out the S3 lines and uncomment the
-C3 ones:
+Each config set ships ready to flash for the board it was built around — the v1
+configs for an ESP32-C3, the v2 configs for an ESP32-S3:
 
-| Board | `esp32: board:` | UART TX | UART RX |
+| Config | `esp32:` block | UART TX | UART RX |
 |---|---|---|---|
-| ESP32-S3 | `esp32-s3-devkitc-1` | `19` | `20` |
-| ESP32-C3 | `esp32c3` | `6` | `7` |
+| `paradox-*-v1.yaml` | `variant: esp32c3`, `flash_size: 4MB` | `6` | `7` |
+| `paradox-*.yaml` | `board: esp32-s3-devkitc-1` | `19` | `20` |
 
-Both pinouts are confirmed working against a panel.
+Both pinouts are confirmed working against a panel. To run a v1 config on an S3
+instead, replace the `esp32:` block with `board: esp32-s3-devkitc-1` and set
+`tx_pin: 19` / `rx_pin: 20` to match that module's wiring.
 
 On a Seeed Studio XIAO ESP32-C3 the GPIO numbers are not what's printed on the
 board — GPIO6 is silkscreened **D4** and GPIO7 is **D5**. Wire against the D
@@ -67,7 +68,7 @@ Paradox Panel  ──serial──►  ESP32-C3/S3  ──Wi-Fi──►  [Tailsc
 
 The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alarm Interface (PAI)** app in Home Assistant connects to it, decodes the data, and pushes it to an MQTT broker — making all zones, sensors and PGMs available as HA entities.
 
-> ⚠️ **Important:** When using the Plug-and-Play cable, serial communication over USB must be redirected to `UART0` — making GPIO19/20 available for panel communication (port marked as "USB")
+> ⚠️ **Important:** (v2 module) When using the Plug-and-Play cable, serial communication over USB must be redirected to `UART0` — making GPIO19/20 available for panel communication (port marked as "USB"). The v1 configs leave `logger:` on its defaults: the C3 pinout uses GPIO6/7 for the panel, so there is no clash with the logger to route around.
 > 
 > (v2 module) "Exit Node" MUST be enabled for the Home Assistant Tailscale App (default) when your ESP is behind heavily restricted NAT or cellular internet! Traffic must be routed through HA in these situations; otherwise, the module will not be reachable from other Headscale nodes. This is also the preferred configuration in general.
 ---
@@ -76,7 +77,7 @@ The ESP32 exposes the panel's UART over Wi-Fi (port `10000`). The **Paradox Alar
 
 | Part | Notes |
 |---|---|
-| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash and 8MB PSRAM is required for VPN support (v2 module). The Wi-Fi-only v1 module needs no PSRAM and also runs on an ESP32-C3 |
+| ESP32-S3 N16R8 (16MB flash, 8MB PSRAM) | Min 8MB flash and 8MB PSRAM is required for VPN support (v2 module). The Wi-Fi-only v1 module needs no PSRAM and ships configured for an ESP32-C3 with 4MB flash |
 | External Wi-Fi antenna | Optional, helps in poor signal spots |
 | 4-pin Molex KK / Dupont connector | Connects to panel serial port |
 | DC buck step-down (12V → 5V) | Powers ESP from panel's 12VDC rail |
@@ -210,7 +211,8 @@ Key settings — see the full file in this repo for the complete config.
 
 > The `packages: tailscale:` and `tailscale:` blocks shown below exist **only in
 > the v2 configs**. The `paradox-*-v1.yaml` files pull in `stream_server` alone
-> and have no VPN configuration at all.
+> and have no VPN configuration at all. The `logger:` settings below are also
+> v2-only — the v1 configs leave `logger:` on its defaults.
 
 ⚠️ **Important:** :
 > The following pasted Tailscale package and stream server `external_components` code is for the original repositories.
@@ -219,12 +221,6 @@ Key settings — see the full file in this repo for the complete config.
 
 ```yaml
 ...
-# Route logging directly to UART0 port (away from default GPIO19/20)
-logger:
-  level: INFO   # change to DEBUG for more informative logs, but will spam the log with tailscale debug messages
-  hardware_uart: UART0
-  baud_rate: 115200   # do not change this — required for PC log output over the USB cable to work
-  
 # Tailscale VPN package
 packages:
   tailscale:
@@ -233,20 +229,8 @@ packages:
     files: [packages/tailscale/tailscale.yaml]
     refresh: 0s
 
-tailscale:
-  auth_key: !secret tailscale_auth_key
-  hostname: "paradox"
-  # uncomment for a self-hosted Headscale server; both http and https (TLS) URLs are supported
-  # login_server: "https://vpn.yourhost.com"
-  # or
-  # login_server: "http://vpn.yourhost.com:8080"
-
 external_components:
   - source: github://oxan/esphome-stream-server
-
-stream_server:
-  uart_id: paradox_uart
-  port: 10000
 ...
 ```
 

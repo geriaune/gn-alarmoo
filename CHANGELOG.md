@@ -13,11 +13,39 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-08-18
+
+Makes the ESP32-C3 the v1 module's shipped target instead of an option hidden
+in comments. The v2 configs and the firmware itself are unchanged.
+
+> ⚠️ **Upgrading from 2.1.x on an ESP32-S3 v1 module:** the v1 configs now carry
+> C3 settings, so pulling this release and reflashing an S3 will not match your
+> board. Replace the `esp32:` block with `board: esp32-s3-devkitc-1` and set
+> `tx_pin: 19` / `rx_pin: 20` — see the pinout table in README.
+
+### Changed
+- **The v1 configs now target the ESP32-C3 directly** instead of shipping the
+  S3 settings with the C3 alternatives commented out below them: `variant:
+  esp32c3` with `flash_size: 4MB`, and `tx_pin: 6` / `rx_pin: 7` active. The
+  `logger:` block falls back to ESPHome's defaults — routing logs to `UART0`
+  only mattered for the S3 pinout, which put the panel on GPIO19/20.
+
 ### Documentation
+- **README rewritten to match the C3-only v1 configs.** The board/pinout table
+  now contrasts the two config sets as shipped (v1 → C3, v2 → S3) rather than
+  describing lines to comment in and out, with a note on moving a v1 config to
+  an S3. The `UART0` redirect note and the `logger:` snippet are marked v2-only.
 - **XIAO ESP32-C3 pin labels noted** alongside the C3 UART pins: GPIO6 is
   silkscreened `D4` and GPIO7 is `D5` on that board, while `tx_pin`/`rx_pin`
   still take the GPIO number. Added to README and to the `uart:` comments in
   `paradox-*-v1.yaml`.
+
+### Fixed
+- **The upstream-check workflow can open issues again.** `check-upstream` called
+  `github.rest.issues.create` with no `permissions:` block, so `GITHUB_TOKEN`
+  fell back to the repository's read-only default and the step failed with
+  "Resource not accessible by integration". Declared `contents: read` /
+  `issues: write` at the job level, matching `codeql.yml`.
 
 ## [2.1.2] — 2026-08-17
 
@@ -1078,7 +1106,8 @@ verified. Treat them as the honest answer to "can I rely on this for X?"
 ---
 
 <!-- Link references for the Keep a Changelog tooling -->
-[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.2...main
+[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.2.0...main
+[2.2.0]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.2...v2.2.0
 [2.1.2]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/geriaune/gn-alarmoo/compare/v2.0.2...v2.1.0
