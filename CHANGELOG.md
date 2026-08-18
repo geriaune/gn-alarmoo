@@ -13,6 +13,19 @@ vendors that code — those version numbers and issue/PR links refer to the
 
 ## [Unreleased]
 
+## [2.2.1] — 2026-08-18
+
+Documentation-only patch on top of v2.2.0. No functional change: the added line
+is commented out in all three v1 configs.
+
+### Documentation
+- **`use_address` hint restored to the v1 configs**, with clearer wording on
+  when to set it: `#  use_address: "192.168.0.x"  # set this AFTER you flash the
+  ESP and connect to the WiFi network`. It had been dropped from
+  `paradox-*-v1.yaml` when those configs moved to the ESP32-C3 in 2.2.0. On a v1
+  module this is how you pin the module's LAN IP when mDNS discovery does not
+  work on your network.
+
 ## [2.2.0] — 2026-08-18
 
 Makes the ESP32-C3 the v1 module's shipped target instead of an option hidden
@@ -1106,7 +1119,8 @@ verified. Treat them as the honest answer to "can I rely on this for X?"
 ---
 
 <!-- Link references for the Keep a Changelog tooling -->
-[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.2.0...main
+[Unreleased]: https://github.com/geriaune/gn-alarmoo/compare/v2.2.1...main
+[2.2.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.2...v2.2.0
 [2.1.2]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/geriaune/gn-alarmoo/compare/v2.1.0...v2.1.1
